@@ -9,8 +9,8 @@ import { GlobalProvider } from "./GlobalProvider";
 import Header from "@/components/layouts/Header";
 
 const Footer = dynamic(() => import("@/components/layouts/Footer"));
-const ServiceWorkerManager = dynamic(() =>
-  import("@/components/utils/ServiceWorkerManager")
+const ServiceWorkerManager = dynamic(
+  () => import("@/components/utils/ServiceWorkerManager"),
 );
 
 const SITE_URL =

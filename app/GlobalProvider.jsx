@@ -5,21 +5,21 @@ import { ToastContainer } from "react-toastify";
 
 import { AuthProvider } from "@/context/AuthContext";
 import { CartProvider } from "@/context/CartContext";
-// import { OrderProvider } from "@/context/OrderContext";
+import { OrderProvider } from "@/context/OrderContext";
 
 import "react-toastify/dist/ReactToastify.css";
 
 export function GlobalProvider({ children }) {
   return (
-    <>
-      <ToastContainer position="bottom-right" />
+    <SessionProvider>
       <AuthProvider>
         <CartProvider>
-          {/*<OrderProvider> */}
-          <SessionProvider>{children}</SessionProvider>
-          {/* </OrderProvider>*/}
+          <OrderProvider>
+            <ToastContainer position="bottom-right" />
+            {children}
+          </OrderProvider>
         </CartProvider>
       </AuthProvider>
-    </>
+    </SessionProvider>
   );
 }
