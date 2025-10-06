@@ -10,47 +10,22 @@ import {
 } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import * as Sentry from "@sentry/nextjs";
 import CartContext from "@/context/CartContext";
 import { signOut, useSession } from "next-auth/react";
 import AuthContext from "@/context/AuthContext";
 import { Menu, ShoppingCart, User, X } from "lucide-react";
-// import dynamic from "next/dynamic";
 
-// Chargement dynamique optimisé du composant Search
-// const Search = dynamic(() => import("./Search"), {
-//   loading: () => (
-//     <div className="h-10 w-full max-w-xl bg-gray-100 animate-pulse rounded-md"></div>
-//   ),
-//   ssr: true,
-// });
-
-// Constantes pour éviter les recréations
+// Constantes
 const CART_LOAD_DELAY = 500;
 const IS_PRODUCTION = process.env.NODE_ENV === "production";
 
-// ✅ Bouton panier
-const CartButton = memo(({ cartCount }) => {
-  return (
-    <Link
-      href="/cart"
-      className="px-3 py-2 flex flex-row text-gray-700 bg-white shadow-sm border border-gray-200 rounded-md transition-colors relative hover:bg-blue-50 hover:border-blue-200 cursor-pointer"
-      aria-label="Panier"
-      data-testid="cart-button"
-      title="Accéder au panier"
-    >
-      <ShoppingCart className="text-gray-400 w-5" />
-      <span className="ml-1">Panier ({cartCount > 0 ? cartCount : 0})</span>
-      {cartCount > 0 && (
-        <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
-          {cartCount}
-        </span>
-      )}
-    </Link>
-  );
-});
-
-CartButton.displayName = "CartButton";
+// Liens de navigation
+const NAV_LINKS = [
+  { href: "/", label: "Accueil" },
+  { href: "/shop", label: "Boutique" },
+  { href: "/about", label: "À propos" },
+  { href: "/contact", label: "Contactez-nous" },
+];
 
 // ✅ Dropdown utilisateur avec gestion vérification
 const UserDropdown = memo(({ user }) => {
@@ -130,12 +105,7 @@ const UserDropdown = memo(({ user }) => {
 UserDropdown.displayName = "UserDropdown";
 
 const Header = () => {
-  const {
-    user,
-    setLoading: setAuthLoading,
-    setUser,
-    clearUser,
-  } = useContext(AuthContext);
+  const { user, setUser, clearUser } = useContext(AuthContext);
   const { setCartToState, cartCount, clearCartOnLogout } =
     useContext(CartContext);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -145,7 +115,6 @@ const Header = () => {
   // Refs pour gérer les timeouts
   const loadCartTimeoutRef = useRef(null);
   const signOutTimeoutRef = useRef(null);
-  const mobileMenuTimeoutRef = useRef(null);
 
   // Flag pour éviter les chargements multiples
   const isCartLoadingRef = useRef(false);
@@ -155,8 +124,6 @@ const Header = () => {
     return () => {
       if (loadCartTimeoutRef.current) clearTimeout(loadCartTimeoutRef.current);
       if (signOutTimeoutRef.current) clearTimeout(signOutTimeoutRef.current);
-      if (mobileMenuTimeoutRef.current)
-        clearTimeout(mobileMenuTimeoutRef.current);
     };
   }, []);
 
@@ -172,13 +139,6 @@ const Header = () => {
       if (!IS_PRODUCTION) {
         console.error("Error loading cart:", error);
       }
-      Sentry.captureException(error, {
-        tags: {
-          component: "Header",
-          action: "loadCart",
-        },
-        level: "warning",
-      });
     } finally {
       setIsLoadingCart(false);
       isCartLoadingRef.current = false;
@@ -205,12 +165,7 @@ const Header = () => {
           loadCart();
         }
       } catch (error) {
-        Sentry.captureException(error, {
-          tags: {
-            component: "Header",
-            action: "initUserData",
-          },
-        });
+        console.error("Error loading user data:", error);
       }
     } else if (data === null && mounted) {
       setUser(null);
@@ -225,12 +180,12 @@ const Header = () => {
   useEffect(() => {
     const handleClickOutside = (event) => {
       const mobileMenu = document.getElementById("mobile-menu");
-      const profileButton = event.target.closest("[data-profile-toggle]");
+      const menuButton = event.target.closest("[data-menu-toggle]");
 
       if (
         mobileMenu &&
         !mobileMenu.contains(event.target) &&
-        !profileButton &&
+        !menuButton &&
         mobileMenuOpen
       ) {
         setMobileMenuOpen(false);
@@ -288,7 +243,7 @@ const Header = () => {
   return (
     <header className="bg-white py-2 border-b sticky top-0 z-50 shadow-sm">
       <div className="container max-w-[1440px] mx-auto px-4">
-        <div className="flex flex-wrap items-center justify-between">
+        <div className="flex items-center justify-between">
           {/* Logo */}
           <div className="shrink-0 mr-5">
             <Link href="/" aria-label="Accueil Buy It Now">
@@ -303,88 +258,67 @@ const Header = () => {
             </Link>
           </div>
 
-          {/* Mobile buttons (Panier + Photo profil OU Hamburger) */}
-          <div className="md:hidden flex items-center gap-2">
-            {user && (
-              <>
-                {/* Bouton Panier Mobile */}
-                <Link
-                  href="/cart"
-                  className="px-3 py-2 inline-block text-center text-gray-700 bg-white shadow-sm border border-gray-200 rounded-md relative hover:bg-blue-50"
-                  aria-label="Panier"
-                  title="Accéder au panier"
-                >
-                  <ShoppingCart className="text-gray-400 w-5" />
-                  {cartCount > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
-                      {cartCount}
-                    </span>
-                  )}
-                </Link>
-
-                {/* Photo de profil Mobile (remplace hamburger) */}
-                <button
-                  onClick={toggleMobileMenu}
-                  data-profile-toggle
-                  className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-gray-200 hover:border-blue-400 transition-colors"
-                  aria-label={
-                    mobileMenuOpen ? "Fermer le menu" : "Ouvrir le menu"
-                  }
-                  aria-expanded={mobileMenuOpen}
-                  aria-controls="mobile-menu"
-                >
-                  <Image
-                    alt={`Photo de profil de ${user?.name || "utilisateur"}`}
-                    src={
-                      user?.avatar?.url !== null
-                        ? user?.avatar?.url
-                        : "/images/default.png"
-                    }
-                    fill
-                    sizes="40px"
-                    className="object-cover"
-                  />
-                </button>
-              </>
-            )}
-
-            {/* Menu Hamburger pour utilisateurs non connectés */}
-            {!user && (
-              <button
-                onClick={toggleMobileMenu}
-                className="px-3 py-2 border border-gray-200 rounded-md text-gray-700"
-                aria-label={
-                  mobileMenuOpen ? "Fermer le menu" : "Ouvrir le menu"
-                }
-                aria-expanded={mobileMenuOpen}
-                aria-controls="mobile-menu"
+          {/* Navigation Desktop */}
+          <nav className="hidden md:flex items-center space-x-6 flex-1">
+            {NAV_LINKS.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="text-gray-700 hover:text-blue-600 transition-colors text-sm font-medium"
               >
-                {mobileMenuOpen ? <X /> : <Menu />}
-              </button>
-            )}
-          </div>
+                {link.label}
+              </Link>
+            ))}
+          </nav>
 
-          {/* Search - Desktop */}
-          {/* <div className="hidden md:block md:flex-1 max-w-xl mx-4">
-            <Search setLoading={setAuthLoading} />
-          </div> */}
+          {/* Icons Desktop + Mobile */}
+          <div className="flex items-center gap-3">
+            {/* Icône Panier */}
+            <Link
+              href="/cart"
+              className="relative p-2 text-gray-700 hover:text-blue-600 transition-colors"
+              aria-label="Panier"
+              title="Accéder au panier"
+            >
+              <ShoppingCart className="w-6 h-6" />
+              {cartCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-medium">
+                  {cartCount}
+                </span>
+              )}
+            </Link>
 
-          {/* User navigation - Desktop */}
-          <div className="hidden md:flex items-center space-x-3">
-            {user && <CartButton cartCount={cartCount} />}
-
+            {/* Icône User ou Dropdown */}
             {!user ? (
               <Link
                 href="/login"
-                className="px-3 py-2 flex flex-row text-gray-700 bg-white shadow-sm border border-gray-200 rounded-md hover:bg-blue-50 hover:border-blue-200 transition-colors"
-                data-testid="login"
+                className="p-2 text-gray-700 hover:text-blue-600 transition-colors"
+                aria-label="Connexion"
+                title="Se connecter"
               >
-                <User className="text-gray-400 w-5" />
-                <span className="ml-1">Connexion</span>
+                <User className="w-6 h-6" />
               </Link>
             ) : (
-              <UserDropdown user={user} />
+              <div className="hidden md:block">
+                <UserDropdown user={user} />
+              </div>
             )}
+
+            {/* Menu Hamburger Mobile */}
+            <button
+              onClick={toggleMobileMenu}
+              data-menu-toggle
+              className="md:hidden p-2 text-gray-700 hover:text-blue-600 transition-colors"
+              aria-label={mobileMenuOpen ? "Fermer le menu" : "Ouvrir le menu"}
+              aria-expanded={mobileMenuOpen}
+              aria-controls="mobile-menu"
+            >
+              {mobileMenuOpen ? (
+                <X className="w-6 h-6" />
+              ) : (
+                <Menu className="w-6 h-6" />
+              )}
+            </button>
           </div>
         </div>
 
@@ -392,59 +326,57 @@ const Header = () => {
         {mobileMenuOpen && (
           <div
             id="mobile-menu"
-            className="md:hidden mt-4 border-t pt-4"
+            className="md:hidden mt-4 border-t pt-4 pb-2"
             role="dialog"
             aria-modal="true"
             aria-label="Menu principal"
           >
-            {/* <div className="mb-4">
-              <Search setLoading={setAuthLoading} />
-            </div> */}
-            {user ? (
-              <div className="space-y-3">
-                {/* Mon profil réapparaît */}
+            <nav className="space-y-1">
+              {NAV_LINKS.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={closeMobileMenu}
+                  className="block px-4 py-3 text-gray-700 hover:bg-blue-50 rounded-md transition-colors"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+
+            {user && (
+              <div className="mt-4 pt-4 border-t space-y-1">
                 <Link
                   href="/me"
                   onClick={closeMobileMenu}
-                  className="block px-2 py-2 text-sm text-gray-700 hover:bg-blue-50 rounded-md"
+                  className="block px-4 py-3 text-gray-700 hover:bg-blue-50 rounded-md"
                 >
                   Mon profil
                 </Link>
-
                 <Link
                   href="/me/orders"
                   onClick={closeMobileMenu}
-                  className="block px-2 py-2 text-sm text-gray-700 hover:bg-blue-50 rounded-md"
+                  className="block px-4 py-3 text-gray-700 hover:bg-blue-50 rounded-md"
                 >
                   Mes commandes
                 </Link>
-
                 <Link
                   href="/me/contact"
                   onClick={closeMobileMenu}
-                  className="block px-2 py-2 text-sm text-gray-700 hover:bg-blue-50 rounded-md"
+                  className="block px-4 py-3 text-gray-700 hover:bg-blue-50 rounded-md"
                 >
                   Contactez le vendeur
                 </Link>
-
                 <button
                   onClick={async () => {
                     closeMobileMenu();
                     await handleSignOut();
                   }}
-                  className="block cursor-pointer w-full text-left px-2 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md"
+                  className="block w-full text-left px-4 py-3 text-red-600 hover:bg-red-50 rounded-md transition-colors"
                 >
                   Déconnexion
                 </button>
               </div>
-            ) : (
-              <Link
-                href="/login"
-                onClick={closeMobileMenu}
-                className="block w-full text-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-              >
-                Connexion
-              </Link>
             )}
           </div>
         )}
