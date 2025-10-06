@@ -8,7 +8,9 @@ import "@/app/globals.css";
 import { GlobalProvider } from "./GlobalProvider";
 import Header from "@/components/layouts/Header";
 
-const Footer = dynamic(() => import("@/components/layouts/Footer"));
+const ConditionalFooter = dynamic(
+  () => import("@/components/layouts/ConditionalFooter"),
+);
 const ServiceWorkerManager = dynamic(
   () => import("@/components/utils/ServiceWorkerManager"),
 );
@@ -129,7 +131,7 @@ export default function RootLayout({ children }) {
             <Header />
           </Suspense>
           <main className="flex-grow">{children}</main>
-          <Footer />
+          <ConditionalFooter />
         </GlobalProvider>
       </body>
     </html>
