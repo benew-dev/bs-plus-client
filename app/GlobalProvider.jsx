@@ -4,8 +4,8 @@ import { SessionProvider } from "next-auth/react";
 import { ToastContainer } from "react-toastify";
 
 import { AuthProvider } from "@/context/AuthContext";
-import { CartProvider } from "@/context/CartContext";
-import { OrderProvider } from "@/context/OrderContext";
+// import { CartProvider } from "@/context/CartContext";
+// import { OrderProvider } from "@/context/OrderContext";
 
 import "react-toastify/dist/ReactToastify.css";
 
