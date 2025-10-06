@@ -118,6 +118,8 @@ const Header = () => {
   const [isLoadingCart, setIsLoadingCart] = useState(false);
   const { data } = useSession();
 
+  console.log("Cart Count: ", cartCount);
+
   // Refs pour gérer les timeouts
   const loadCartTimeoutRef = useRef(null);
   const signOutTimeoutRef = useRef(null);
