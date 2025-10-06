@@ -28,7 +28,26 @@ const NAV_LINKS = [
 ];
 
 // ✅ Dropdown utilisateur avec gestion vérification
-const UserDropdown = memo(({ user }) => {
+const UserDropdown = memo(({ user, handleSignOut }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen]);
+
   const menuItems = [
     { href: "/me", label: "Mon profil" },
     { href: "/me/orders", label: "Mes commandes" },
@@ -36,68 +55,42 @@ const UserDropdown = memo(({ user }) => {
   ];
 
   return (
-    <div className="relative group">
-      <Link
-        href="/me"
-        className="flex items-center space-x-2 px-3 py-2 rounded-md transition-colors hover:bg-blue-50"
-        aria-expanded="false"
-        aria-haspopup="true"
-        id="user-menu-button"
+    <div className="relative" ref={dropdownRef}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="p-2 text-gray-700 hover:text-blue-600 transition-colors"
+        aria-label="Menu utilisateur"
+        aria-expanded={isOpen}
         title="Menu utilisateur"
       >
-        <div className="relative w-8 h-8 rounded-full overflow-hidden border border-gray-200">
-          <Image
-            data-testid="profile image"
-            alt={`Photo de profil de ${user?.name || "utilisateur"}`}
-            src={
-              user?.avatar?.url !== null
-                ? user?.avatar?.url
-                : "/images/default.png"
-            }
-            fill
-            sizes="32px"
-            className="object-cover"
-            priority={false}
-          />
-        </div>
-        <div className="hidden lg:block">
-          <div className="flex items-center space-x-1">
-            <p className="text-sm font-medium text-gray-700">{user?.name}</p>
-          </div>
-          <p className="text-xs text-gray-500 truncate max-w-[150px]">
-            {user?.email}
-          </p>
-        </div>
-      </Link>
+        <User className="w-6 h-6" />
+      </button>
 
-      <div
-        role="menu"
-        aria-orientation="vertical"
-        aria-labelledby="user-menu-button"
-        className="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200 z-50"
-      >
-        <div className="py-1">
-          {menuItems.map((item, index) => (
-            <Link
-              key={`menu-item-${index}`}
-              href={item.href}
-              className={`block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 ${
-                item.className || ""
-              }`}
-              role="menuitem"
+      {isOpen && (
+        <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50">
+          <div className="py-1">
+            {menuItems.map((item, index) => (
+              <Link
+                key={`menu-item-${index}`}
+                href={item.href}
+                onClick={() => setIsOpen(false)}
+                className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50"
+              >
+                {item.label}
+              </Link>
+            ))}
+            <button
+              onClick={() => {
+                setIsOpen(false);
+                handleSignOut();
+              }}
+              className="block cursor-pointer w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
             >
-              {item.label}
-            </Link>
-          ))}
-          <button
-            onClick={() => signOut({ callbackUrl: "/login" })}
-            className="block cursor-pointer w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-            role="menuitem"
-          >
-            Déconnexion
-          </button>
+              Déconnexion
+            </button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 });
@@ -282,14 +275,16 @@ const Header = () => {
             >
               <ShoppingCart className="w-6 h-6" />
               {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-medium">
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full min-w-[20px] h-5 px-1 flex items-center justify-center text-xs font-medium">
                   {cartCount}
                 </span>
               )}
             </Link>
 
             {/* Icône User ou Dropdown */}
-            {!user ? (
+            {user ? (
+              <UserDropdown user={user} handleSignOut={handleSignOut} />
+            ) : (
               <Link
                 href="/login"
                 className="p-2 text-gray-700 hover:text-blue-600 transition-colors"
@@ -298,10 +293,6 @@ const Header = () => {
               >
                 <User className="w-6 h-6" />
               </Link>
-            ) : (
-              <div className="hidden md:block">
-                <UserDropdown user={user} />
-              </div>
             )}
 
             {/* Menu Hamburger Mobile */}
@@ -322,7 +313,7 @@ const Header = () => {
           </div>
         </div>
 
-        {/* Mobile menu */}
+        {/* Mobile menu - Affiche uniquement les liens de navigation */}
         {mobileMenuOpen && (
           <div
             id="mobile-menu"
@@ -343,41 +334,6 @@ const Header = () => {
                 </Link>
               ))}
             </nav>
-
-            {user && (
-              <div className="mt-4 pt-4 border-t space-y-1">
-                <Link
-                  href="/me"
-                  onClick={closeMobileMenu}
-                  className="block px-4 py-3 text-gray-700 hover:bg-blue-50 rounded-md"
-                >
-                  Mon profil
-                </Link>
-                <Link
-                  href="/me/orders"
-                  onClick={closeMobileMenu}
-                  className="block px-4 py-3 text-gray-700 hover:bg-blue-50 rounded-md"
-                >
-                  Mes commandes
-                </Link>
-                <Link
-                  href="/me/contact"
-                  onClick={closeMobileMenu}
-                  className="block px-4 py-3 text-gray-700 hover:bg-blue-50 rounded-md"
-                >
-                  Contactez le vendeur
-                </Link>
-                <button
-                  onClick={async () => {
-                    closeMobileMenu();
-                    await handleSignOut();
-                  }}
-                  className="block w-full text-left px-4 py-3 text-red-600 hover:bg-red-50 rounded-md transition-colors"
-                >
-                  Déconnexion
-                </button>
-              </div>
-            )}
           </div>
         )}
       </div>
