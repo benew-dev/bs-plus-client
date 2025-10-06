@@ -58,12 +58,25 @@ const UserDropdown = memo(({ user, handleSignOut }) => {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="p-2 text-gray-700 hover:text-blue-600 transition-colors"
+        className="p-1 rounded-full hover:ring-2 hover:ring-blue-400 transition-all"
         aria-label="Menu utilisateur"
         aria-expanded={isOpen}
         title="Menu utilisateur"
       >
-        <User className="w-6 h-6" />
+        <div className="relative w-8 h-8 rounded-full overflow-hidden border-2 border-gray-200">
+          <Image
+            alt={`Photo de profil de ${user?.name || "utilisateur"}`}
+            src={
+              user?.avatar?.url !== null
+                ? user?.avatar?.url
+                : "/images/default.png"
+            }
+            fill
+            sizes="32px"
+            className="object-cover"
+            priority={false}
+          />
+        </div>
       </button>
 
       {isOpen && (
@@ -281,7 +294,7 @@ const Header = () => {
               )}
             </Link>
 
-            {/* Icône User ou Dropdown */}
+            {/* Avatar User ou Icône User */}
             {user ? (
               <UserDropdown user={user} handleSignOut={handleSignOut} />
             ) : (
