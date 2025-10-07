@@ -132,3 +132,11 @@ function hashCode(str) {
   }
   return Math.abs(hash).toString(16);
 }
+
+// Export par défaut pour compatibilité
+export default {
+  captureClientError,
+  captureException,
+  captureMessage,
+  setUser,
+};
