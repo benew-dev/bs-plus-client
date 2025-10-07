@@ -51,7 +51,6 @@ const UserDropdown = memo(({ user, handleSignOut }) => {
   const menuItems = [
     { href: "/me", label: "Mon profil" },
     { href: "/me/orders", label: "Mes commandes" },
-    { href: "/me/contact", label: "Contactez le vendeur" },
   ];
 
   return (
