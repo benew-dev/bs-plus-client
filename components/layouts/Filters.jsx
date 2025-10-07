@@ -70,7 +70,7 @@ const Filters = ({ categories, setLocalLoading }) => {
         }
 
         // Navigation vers la nouvelle URL
-        const path = `/?${params.toString()}`;
+        const path = `/shop/?${params.toString()}`;
         setOpen(false);
         setIsSubmitting(false);
         setLocalLoading(false);
@@ -103,7 +103,7 @@ const Filters = ({ categories, setLocalLoading }) => {
       params = getPriceQueryParams(params, "max", max);
 
       // Navigation
-      const path = `/?${params.toString()}`;
+      const path = `/shop/?${params.toString()}`;
       setOpen(false);
       setIsSubmitting(false);
       setLocalLoading(false);
@@ -123,7 +123,7 @@ const Filters = ({ categories, setLocalLoading }) => {
     setLocalLoading(true);
     setMin("");
     setMax("");
-    router.push("/");
+    router.push("/shop");
     setOpen(false);
   }, []);
 
