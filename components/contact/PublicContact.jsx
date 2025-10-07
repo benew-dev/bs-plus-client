@@ -1,10 +1,14 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useContext } from "react";
 import { toast } from "react-toastify";
 import { Mail, Send, User, MessageSquare, CheckCircle } from "lucide-react";
+import AuthContext from "@/context/AuthContext";
 
 const PublicContact = () => {
+  // Contexte d'authentification
+  const { sendEmail, error, clearErrors } = useContext(AuthContext);
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
