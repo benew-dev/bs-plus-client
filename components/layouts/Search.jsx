@@ -98,7 +98,7 @@ const Search = ({ setLoading }) => {
 
   return (
     <form
-      className="flex flex-nowrap items-center w-full order-last md:order-none mt-5 md:mt-0 md:w-1/3 lg:w-2/4"
+      className="flex flex-nowrap items-end w-full order-last md:order-none mt-5 md:mt-0 md:w-1/3 lg:w-2/4"
       onSubmit={(e) => {
         e.preventDefault();
         debouncedSubmit(e);
