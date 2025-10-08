@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   ShoppingBag,
@@ -12,33 +11,6 @@ import {
 } from "lucide-react";
 
 const Hero = () => {
-  const [currentSlide, setCurrentSlide] = useState(0);
-
-  const slides = [
-    {
-      title: "Bienvenue sur Buy It Now",
-      subtitle: "Votre destination shopping de confiance",
-      description:
-        "Découvrez des milliers de produits de qualité à des prix imbattables",
-      gradient: "from-blue-600 to-purple-600",
-      icon: <ShoppingBag className="w-12 h-12" />,
-    },
-    {
-      title: "Livraison Express",
-      subtitle: "Recevez vos commandes rapidement",
-      description: "Livraison gratuite dès 50€ d'achat partout en France",
-      gradient: "from-green-600 to-teal-600",
-      icon: <Zap className="w-12 h-12" />,
-    },
-    {
-      title: "Paiement Sécurisé",
-      subtitle: "Achetez en toute confiance",
-      description: "Vos transactions sont 100% sécurisées et protégées",
-      gradient: "from-orange-600 to-red-600",
-      icon: <Shield className="w-12 h-12" />,
-    },
-  ];
-
   const features = [
     {
       icon: <ShoppingBag className="w-6 h-6" />,
@@ -62,14 +34,6 @@ const Hero = () => {
     },
   ];
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % slides.length);
-    }, 5000);
-
-    return () => clearInterval(timer);
-  }, [slides.length]);
-
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-gray-50 to-blue-50">
       {/* Animated Background */}
@@ -91,21 +55,22 @@ const Hero = () => {
               </span>
             </div>
 
-            {/* Main Title - Animated */}
-            <div className="mb-6 transition-all duration-500">
+            {/* Main Title */}
+            <div className="mb-6">
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-800 mb-4">
-                {slides[currentSlide].title}
+                Bienvenue sur Buy It Now
               </h1>
               <p className="text-xl md:text-2xl text-gray-600 font-semibold mb-2">
-                {slides[currentSlide].subtitle}
+                Votre destination shopping de confiance
               </p>
               <p className="text-lg text-gray-500">
-                {slides[currentSlide].description}
+                Découvrez des milliers de produits de qualité à des prix
+                imbattables
               </p>
             </div>
 
             {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-8">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
               <Link
                 href="/shop"
                 className="group px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg hover:shadow-xl flex items-center justify-center"
@@ -120,36 +85,18 @@ const Hero = () => {
                 En savoir plus
               </Link>
             </div>
-
-            {/* Slide Indicators */}
-            <div className="flex gap-2 justify-center lg:justify-start">
-              {slides.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentSlide(index)}
-                  className={`h-2 rounded-full transition-all ${
-                    index === currentSlide
-                      ? "w-8 bg-blue-600"
-                      : "w-2 bg-gray-300 hover:bg-gray-400"
-                  }`}
-                  aria-label={`Aller au slide ${index + 1}`}
-                />
-              ))}
-            </div>
           </div>
 
           {/* Visual Element */}
           <div className="flex-1 relative z-10">
-            <div
-              className={`relative bg-gradient-to-br ${slides[currentSlide].gradient} rounded-3xl shadow-2xl p-12 transition-all duration-500`}
-            >
+            <div className="relative bg-gradient-to-br from-blue-600 to-purple-600 rounded-3xl shadow-2xl p-12">
               {/* Decorative Elements */}
               <div className="absolute -top-4 -right-4 w-24 h-24 bg-white/20 rounded-full blur-2xl"></div>
               <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-white/20 rounded-full blur-2xl"></div>
 
               {/* Icon */}
               <div className="text-white text-center mb-6">
-                {slides[currentSlide].icon}
+                <ShoppingBag className="w-12 h-12 mx-auto" />
               </div>
 
               {/* Stats */}
