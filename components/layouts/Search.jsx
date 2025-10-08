@@ -58,6 +58,9 @@ const Search = ({ setLoading }) => {
 
         // Navigation vers la page de résultats
         router.push(`/shop/?keyword=${encodeURIComponent(keyword.trim())}`);
+
+        setLoading?.(false);
+        setIsSubmitting(false);
       } catch (error) {
         // Gestion d'erreur améliorée
         if (error.inner && error.inner.length) {
