@@ -141,7 +141,7 @@ const Profile = () => {
             <div className="relative mt-4">
               <button
                 onClick={toggleModal}
-                className="dots-button p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors"
+                className="dots-button p-2 text-gray-600 hover:text-gray-900 rounded-full transition-colors"
                 aria-label="Plus d'options"
                 aria-expanded={isModalOpen}
                 aria-haspopup="true"

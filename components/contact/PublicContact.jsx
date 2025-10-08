@@ -79,7 +79,7 @@ const PublicContact = () => {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch("/api/emails/public", {
+      const response = await fetch("/api/emails", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
