@@ -9,7 +9,7 @@ import {
   FiltersSkeleton,
   ProductItemSkeleton,
 } from "../skeletons/ListProductsSkeleton";
-import { SearchX } from "lucide-react";
+import { SearchX, Grid2x2 } from "lucide-react";
 
 // Import dynamique des composants
 const CustomPagination = dynamic(
@@ -27,10 +27,15 @@ const ProductItem = dynamic(() => import("./ProductItem"), {
   ssr: true,
 });
 
+const Search = dynamic(() => import("../layouts/Search"), {
+  ssr: true,
+});
+
 const ListProducts = ({ data, categories }) => {
   // États locaux
   const [localLoading, setLocalLoading] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -60,7 +65,6 @@ const ListProducts = ({ data, categories }) => {
 
       return summary.length > 0 ? summary.join(" | ") : null;
     } catch (err) {
-      // Capture silencieuse d'erreur pour éviter de planter le composant
       captureException(err, {
         tags: { component: "ListProducts", function: "getFilterSummary" },
       });
@@ -81,15 +85,12 @@ const ListProducts = ({ data, categories }) => {
       setLocalLoading(true);
       router.push("/");
     } catch (err) {
-      // Supprimer cette ligne : setError(err);
-      // Au lieu de cela, laisser l'erreur se propager vers Error Boundary
       console.error(err);
-      throw err; // Optionnel, mais permet de propager l'erreur vers error.jsx
+      throw err;
     }
-  }, []);
+  }, [router]);
 
   useEffect(() => {
-    // Seulement pour l'initial render, pas pour les changements de filtres
     if (isInitialLoad) {
       setIsInitialLoad(false);
     }
@@ -97,7 +98,7 @@ const ListProducts = ({ data, categories }) => {
     if (localLoading) {
       setLocalLoading(false);
     }
-  }, [data]);
+  }, [data, isInitialLoad, localLoading]);
 
   // Afficher un avertissement si les données ne sont pas valides
   if (!hasValidData) {
@@ -117,23 +118,64 @@ const ListProducts = ({ data, categories }) => {
     <section className="py-8">
       <div className="container max-w-[1440px] mx-auto px-4">
         <div className="flex flex-col md:flex-row -mx-4">
-          {hasValidCategories ? (
-            <Filters
-              categories={categories}
-              setLocalLoading={setLocalLoading}
-            />
-          ) : (
-            <div className="md:w-1/3 lg:w-1/4 px-4">
+          {/* Sidebar Filters - Desktop uniquement */}
+          <div className="hidden md:block md:w-1/3 lg:w-1/4 px-4">
+            {hasValidCategories ? (
+              <Filters
+                categories={categories}
+                setLocalLoading={setLocalLoading}
+              />
+            ) : (
               <div className="p-4 bg-gray-100 rounded-md">
                 <p>Chargement des filtres...</p>
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
+          {/* Main Content */}
           <main
-            className="md:w-2/3 lg:w-3/4 px-3"
+            className="w-full md:w-2/3 lg:w-3/4 px-3"
             aria-label="Liste des produits"
           >
+            {/* Barre Search + Toggle Filters Mobile */}
+            <div className="mb-4">
+              {/* Mobile: Grid2x2 + Search côte à côte */}
+              <div className="flex items-center gap-2 md:hidden mb-4">
+                <button
+                  onClick={() => setShowMobileFilters(!showMobileFilters)}
+                  className="p-2 border border-gray-200 bg-white rounded-md shadow-sm hover:bg-gray-50 flex-shrink-0"
+                  aria-label="Afficher/Masquer les filtres"
+                  aria-expanded={showMobileFilters}
+                >
+                  <Grid2x2 className="w-5 h-5 text-gray-700" />
+                </button>
+                <div className="flex-1">
+                  <Search setLoading={setLocalLoading} />
+                </div>
+              </div>
+
+              {/* Desktop: Search uniquement */}
+              <div className="hidden md:block">
+                <Search setLoading={setLocalLoading} />
+              </div>
+            </div>
+
+            {/* Filters Mobile - Collapsible */}
+            {showMobileFilters && (
+              <div className="md:hidden mb-4">
+                {hasValidCategories ? (
+                  <Filters
+                    categories={categories}
+                    setLocalLoading={setLocalLoading}
+                  />
+                ) : (
+                  <div className="p-4 bg-gray-100 rounded-md">
+                    <p>Chargement des filtres...</p>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Affichage du récapitulatif des filtres et du nombre de résultats */}
             {filterSummary && (
               <div

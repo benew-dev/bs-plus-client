@@ -4,7 +4,6 @@ import { useState, useCallback, useMemo, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "react-toastify";
 import { getPriceQueryParams, isArrayEmpty } from "@/helpers/helpers";
-import { ChevronDown, ChevronUp } from "lucide-react";
 
 const Filters = ({ categories, setLocalLoading }) => {
   const router = useRouter();
@@ -13,7 +12,6 @@ const Filters = ({ categories, setLocalLoading }) => {
   // État local synchronisé avec les paramètres d'URL
   const [min, setMin] = useState(() => searchParams?.get("min") || "");
   const [max, setMax] = useState(() => searchParams?.get("max") || "");
-  const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Mémoiser la valeur de catégorie actuelle
@@ -71,7 +69,6 @@ const Filters = ({ categories, setLocalLoading }) => {
 
         // Navigation vers la nouvelle URL
         const path = `/shop/?${params.toString()}`;
-        setOpen(false);
         setIsSubmitting(false);
         setLocalLoading(false);
         router.push(path);
@@ -82,7 +79,7 @@ const Filters = ({ categories, setLocalLoading }) => {
         setIsSubmitting(false);
       }
     },
-    [searchParams],
+    [searchParams, router, setLocalLoading],
   );
 
   // Gestionnaire pour appliquer les filtres de prix
@@ -98,13 +95,12 @@ const Filters = ({ categories, setLocalLoading }) => {
       // Création des paramètres d'URL
       let params = new URLSearchParams(searchParams?.toString() || "");
 
-      // Par celles-ci:
+      // Mise à jour des paramètres de prix
       params = getPriceQueryParams(params, "min", min);
       params = getPriceQueryParams(params, "max", max);
 
       // Navigation
       const path = `/shop/?${params.toString()}`;
-      setOpen(false);
       setIsSubmitting(false);
       setLocalLoading(false);
       router.push(path);
@@ -115,7 +111,7 @@ const Filters = ({ categories, setLocalLoading }) => {
       setLocalLoading(false);
       setIsSubmitting(false);
     }
-  }, [min, max, searchParams]);
+  }, [min, max, searchParams, validatePrices, router, setLocalLoading]);
 
   // Réinitialiser les filtres
   const resetFilters = useCallback(() => {
@@ -124,8 +120,7 @@ const Filters = ({ categories, setLocalLoading }) => {
     setMin("");
     setMax("");
     router.push("/shop");
-    setOpen(false);
-  }, []);
+  }, [router, setLocalLoading]);
 
   // Vérifier si des filtres sont actifs
   const hasActiveFilters = useMemo(() => {
@@ -133,31 +128,16 @@ const Filters = ({ categories, setLocalLoading }) => {
   }, [min, max, currentCategory]);
 
   return (
-    <aside className="md:w-1/3 lg:w-1/4 px-4">
-      <div className="sticky top-20">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-gray-800 hidden md:block">
-            Filtres
-          </h2>
-
-          <button
-            className="md:hidden w-full mb-4 py-2 px-4 bg-white border border-gray-200 rounded-md shadow-sm flex justify-between items-center"
-            onClick={() => setOpen((prev) => !prev)}
-            aria-expanded={open}
-            aria-controls="filter-panel"
-          >
-            <span className="font-medium text-gray-700">Filtres</span>
-            {open ? (
-              <ChevronUp className="text-gray-500" />
-            ) : (
-              <ChevronDown className="text-gray-500" />
-            )}
-          </button>
+    <aside className="w-full">
+      <div className="md:sticky md:top-20">
+        {/* Header - Desktop uniquement */}
+        <div className="hidden md:flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold text-gray-800">Filtres</h2>
 
           {hasActiveFilters && (
             <button
               onClick={resetFilters}
-              className="text-sm text-blue-600 cursor-pointer hover:text-blue-800 hidden md:block"
+              className="text-sm text-blue-600 cursor-pointer hover:text-blue-800"
               aria-label="Réinitialiser tous les filtres"
             >
               Réinitialiser
@@ -165,10 +145,8 @@ const Filters = ({ categories, setLocalLoading }) => {
           )}
         </div>
 
-        <div
-          id="filter-panel"
-          className={`${open ? "block" : "hidden"} md:block space-y-4`}
-        >
+        {/* Contenu des filtres - Toujours visible */}
+        <div className="space-y-4">
           {/* Prix */}
           <div className="p-4 border border-gray-200 bg-white rounded-lg shadow-sm">
             <h3 className="font-semibold mb-3 text-gray-700">Prix (Fdj)</h3>
