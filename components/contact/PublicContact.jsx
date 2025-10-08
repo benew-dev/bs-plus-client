@@ -79,21 +79,16 @@ const PublicContact = () => {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch("/api/emails", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
+      // Utiliser la méthode sendEmail du contexte
+      const result = await sendEmail({
+        name: formData.name,
+        email: formData.email,
+        subject: formData.subject,
+        message: formData.message,
       });
 
-      const data = await response.json();
-
-      if (response.ok && data.success) {
+      if (result && result.success) {
         setIsSuccess(true);
-        toast.success(
-          "Message envoyé avec succès ! Nous vous répondrons bientôt.",
-        );
         setFormData({
           name: "",
           email: "",
@@ -101,7 +96,8 @@ const PublicContact = () => {
           message: "",
         });
       } else {
-        toast.error(data.message || "Une erreur est survenue");
+        // L'erreur est déjà affichée par le contexte via setError
+        // toast.error déjà appelé dans sendEmail si nécessaire
       }
     } catch (error) {
       console.error("Error:", error);
@@ -110,31 +106,6 @@ const PublicContact = () => {
       setIsSubmitting(false);
     }
   };
-
-  if (isSuccess) {
-    return (
-      <div className="max-w-2xl mx-auto">
-        <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
-          <div className="mb-6">
-            <CheckCircle className="w-20 h-20 text-green-500 mx-auto" />
-          </div>
-          <h2 className="text-3xl font-bold text-gray-800 mb-4">
-            Message envoyé !
-          </h2>
-          <p className="text-gray-600 mb-8">
-            Merci de nous avoir contactés. Notre équipe vous répondra dans les
-            plus brefs délais.
-          </p>
-          <button
-            onClick={() => setIsSuccess(false)}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Envoyer un autre message
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="max-w-2xl mx-auto">

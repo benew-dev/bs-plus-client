@@ -364,12 +364,33 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const sendEmail = async ({ subject, message }) => {
+  const sendEmail = async ({ name, email, subject, message }) => {
     try {
       setLoading(true);
       setError(null);
 
-      // Validation basique
+      // Validation basique côté client
+      if (name && (!name.trim() || name.length < 2)) {
+        const validationError = new Error(
+          "Le nom doit contenir au moins 2 caractères",
+        );
+        console.error(validationError, "AuthContext", "sendEmail", false);
+        setError("Le nom doit contenir au moins 2 caractères");
+        setLoading(false);
+        return;
+      }
+
+      if (
+        email &&
+        (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+      ) {
+        const validationError = new Error("Email invalide");
+        console.error(validationError, "AuthContext", "sendEmail", false);
+        setError("Email invalide");
+        setLoading(false);
+        return;
+      }
+
       if (!subject || !subject.trim()) {
         const validationError = new Error("Le sujet est obligatoire");
         console.error(validationError, "AuthContext", "sendEmail", false);
@@ -386,24 +407,59 @@ export const AuthProvider = ({ children }) => {
         return;
       }
 
-      if (subject.length > 200) {
+      if (subject.length < 5) {
         const validationError = new Error(
-          "Le sujet est trop long (max 200 caractères)",
+          "Le sujet doit contenir au moins 5 caractères",
         );
         console.error(validationError, "AuthContext", "sendEmail", false);
-        setError("Le sujet est trop long (max 200 caractères)");
+        setError("Le sujet doit contenir au moins 5 caractères");
         setLoading(false);
         return;
       }
 
-      if (message.length > 5000) {
+      if (subject.length > 100) {
         const validationError = new Error(
-          "Le message est trop long (max 5000 caractères)",
+          "Le sujet est trop long (max 100 caractères)",
         );
         console.error(validationError, "AuthContext", "sendEmail", false);
-        setError("Le message est trop long (max 5000 caractères)");
+        setError("Le sujet est trop long (max 100 caractères)");
         setLoading(false);
         return;
+      }
+
+      if (message.length < 20) {
+        const validationError = new Error(
+          "Le message doit contenir au moins 20 caractères",
+        );
+        console.error(validationError, "AuthContext", "sendEmail", false);
+        setError("Le message doit contenir au moins 20 caractères");
+        setLoading(false);
+        return;
+      }
+
+      if (message.length > 1000) {
+        const validationError = new Error(
+          "Le message est trop long (max 1000 caractères)",
+        );
+        console.error(validationError, "AuthContext", "sendEmail", false);
+        setError("Le message est trop long (max 1000 caractères)");
+        setLoading(false);
+        return;
+      }
+
+      // Préparer le payload (avec ou sans name/email pour utilisateurs publics)
+      const payload = {
+        subject: subject.trim(),
+        message: message.trim(),
+      };
+
+      // Ajouter name et email si fournis (utilisateur non connecté)
+      if (name && name.trim()) {
+        payload.name = name.trim();
+      }
+
+      if (email && email.trim()) {
+        payload.email = email.trim();
       }
 
       // Simple fetch avec timeout
@@ -416,7 +472,7 @@ export const AuthProvider = ({ children }) => {
           "Content-Type": "application/json",
           Accept: "application/json",
         },
-        body: JSON.stringify({ subject, message }),
+        body: JSON.stringify(payload),
         signal: controller.signal,
         credentials: "include",
       });
@@ -428,7 +484,13 @@ export const AuthProvider = ({ children }) => {
         let errorMessage = "";
         switch (res.status) {
           case 400:
-            errorMessage = data.message || "Données invalides";
+            // Afficher les erreurs de validation spécifiques si disponibles
+            if (data.errors) {
+              const firstErrorKey = Object.keys(data.errors)[0];
+              errorMessage = data.errors[firstErrorKey] || "Données invalides";
+            } else {
+              errorMessage = data.message || "Données invalides";
+            }
             break;
           case 401:
             errorMessage = "Session expirée. Veuillez vous reconnecter";
@@ -454,12 +516,13 @@ export const AuthProvider = ({ children }) => {
 
         setError(errorMessage);
         setLoading(false);
-        return;
+        return { success: false, message: errorMessage };
       }
 
       if (data.success) {
         toast.success("Message envoyé avec succès!");
-        router.push("/me");
+        setLoading(false);
+        return { success: true, data: data.data };
       }
     } catch (error) {
       if (error.name === "AbortError") {
@@ -470,6 +533,8 @@ export const AuthProvider = ({ children }) => {
         console.error(error, "AuthContext", "sendEmail", true);
       }
       console.error("Email send error:", error.message);
+      setLoading(false);
+      return { success: false, message: error.message };
     } finally {
       setLoading(false);
     }
