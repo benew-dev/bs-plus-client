@@ -108,9 +108,9 @@ const Search = ({ setLoading }) => {
     >
       <input
         ref={inputRef}
-        className="grow appearance-none border border-gray-200 bg-gray-100 rounded-md mr-2 py-2 px-3 hover:border-gray-400 focus:outline-none focus:border-blue-500"
+        className="grow appearance-none border border-gray-200 bg-gray-100 rounded-md mr-2 py-2 px-2 md:px-3 hover:border-gray-400 focus:outline-none focus:border-blue-500 text-sm md:text-base"
         type="search"
-        placeholder="Rechercher un produit..."
+        placeholder="Rechercher..."
         value={keyword}
         onChange={handleKeywordChange}
         onKeyDown={handleKeyDown}
@@ -120,7 +120,7 @@ const Search = ({ setLoading }) => {
       />
       <button
         type="button"
-        className={`px-4 py-2 inline-block border border-transparent ${
+        className={`p-2 md:px-4 md:py-2 inline-flex items-center justify-center border border-transparent ${
           isSubmitting
             ? "bg-blue-400 cursor-not-allowed"
             : "bg-blue-600 hover:bg-blue-700"
@@ -129,7 +129,7 @@ const Search = ({ setLoading }) => {
         disabled={isSubmitting}
         aria-label="Lancer la recherche"
       >
-        <PackageSearch />
+        <PackageSearch className="w-5 h-5" />
       </button>
     </form>
   );
