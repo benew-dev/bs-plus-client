@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
-import { Search } from "lucide-react";
+import { PackageSearch } from "lucide-react";
 
 // Fonction de debounce pour limiter les requêtes
 const useDebounce = (fn, delay) => {
@@ -129,7 +129,7 @@ const Search = ({ setLoading }) => {
         disabled={isSubmitting}
         aria-label="Lancer la recherche"
       >
-        <Search />
+        <PackageSearch />
       </button>
     </form>
   );
