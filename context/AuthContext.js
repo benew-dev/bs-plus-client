@@ -77,7 +77,7 @@ export const AuthProvider = ({ children }) => {
           body: JSON.stringify({ name, phone, email, password }),
           signal: controller.signal,
           credentials: "include",
-        }
+        },
       );
 
       clearTimeout(timeoutId);
@@ -145,45 +145,12 @@ export const AuthProvider = ({ children }) => {
         return;
       }
 
-      // Validation de l'adresse si fournie
-      if (address) {
-        if (!address.street || address.street.trim() === "") {
-          console.log("La rue est obligatoire");
-          setError("La rue est obligatoire");
-          setLoading(false);
-          return;
-        }
-
-        if (!address.city || address.city.trim() === "") {
-          console.log("La ville est obligatoire");
-          setError("La ville est obligatoire");
-          setLoading(false);
-          return;
-        }
-
-        if (!address.country || address.country.trim() === "") {
-          console.log("Le pays est obligatoire");
-          setError("Le pays est obligatoire");
-          setLoading(false);
-          return;
-        }
-      }
-
       // Préparer les données à envoyer
       const payload = {
         name: name.trim(),
         phone: phone ? phone.trim() : "",
         avatar,
       };
-
-      // Ajouter l'adresse seulement si elle est fournie et complète
-      if (address && address.street && address.city && address.country) {
-        payload.address = {
-          street: address.street.trim(),
-          city: address.city.trim(),
-          country: address.country.trim(),
-        };
-      }
 
       // Simple fetch avec timeout court
       const controller = new AbortController();
@@ -200,7 +167,7 @@ export const AuthProvider = ({ children }) => {
           body: JSON.stringify(payload),
           signal: controller.signal,
           credentials: "include",
-        }
+        },
       );
 
       clearTimeout(timeoutId);
@@ -297,7 +264,7 @@ export const AuthProvider = ({ children }) => {
 
       if (currentPassword === newPassword) {
         const validationError = new Error(
-          "Le nouveau mot de passe doit être différent"
+          "Le nouveau mot de passe doit être différent",
         );
         console.error(validationError, "AuthContext", "updatePassword", false);
         setError("Le nouveau mot de passe doit être différent");
@@ -307,7 +274,7 @@ export const AuthProvider = ({ children }) => {
 
       if (newPassword.length < 8) {
         const validationError = new Error(
-          "Minimum 8 caractères pour le nouveau mot de passe"
+          "Minimum 8 caractères pour le nouveau mot de passe",
         );
         console.error(validationError, "AuthContext", "updatePassword", false);
         setError("Minimum 8 caractères pour le nouveau mot de passe");
@@ -317,11 +284,11 @@ export const AuthProvider = ({ children }) => {
 
       if (newPassword !== confirmPassword) {
         const validationError = new Error(
-          "Le nouveau mot de passe et la confirmation ne correspondent pas"
+          "Le nouveau mot de passe et la confirmation ne correspondent pas",
         );
         console.error(validationError, "AuthContext", "updatePassword", false);
         setError(
-          "Le nouveau mot de passe et la confirmation ne correspondent pas"
+          "Le nouveau mot de passe et la confirmation ne correspondent pas",
         );
         setLoading(false);
         return;
@@ -346,7 +313,7 @@ export const AuthProvider = ({ children }) => {
           }),
           signal: controller.signal,
           credentials: "include",
-        }
+        },
       );
 
       clearTimeout(timeoutId);
@@ -421,7 +388,7 @@ export const AuthProvider = ({ children }) => {
 
       if (subject.length > 200) {
         const validationError = new Error(
-          "Le sujet est trop long (max 200 caractères)"
+          "Le sujet est trop long (max 200 caractères)",
         );
         console.error(validationError, "AuthContext", "sendEmail", false);
         setError("Le sujet est trop long (max 200 caractères)");
@@ -431,7 +398,7 @@ export const AuthProvider = ({ children }) => {
 
       if (message.length > 5000) {
         const validationError = new Error(
-          "Le message est trop long (max 5000 caractères)"
+          "Le message est trop long (max 5000 caractères)",
         );
         console.error(validationError, "AuthContext", "sendEmail", false);
         setError("Le message est trop long (max 5000 caractères)");

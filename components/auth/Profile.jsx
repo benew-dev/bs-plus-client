@@ -146,7 +146,7 @@ const Profile = () => {
                 aria-expanded={isModalOpen}
                 aria-haspopup="true"
               >
-                <EllipsisVertical className="w-5 h-5" />
+                <EllipsisVertical className="w-5 h-5" color="#ffffff" />
               </button>
 
               {isModalOpen && (
