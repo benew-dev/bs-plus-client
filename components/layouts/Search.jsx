@@ -79,7 +79,7 @@ const Search = ({ setLoading }) => {
         setIsSubmitting(false);
       }
     },
-    [keyword],
+    [keyword, router, setLoading, isSubmitting],
   );
 
   // Soumettre sur appui de la touche Entrée avec debounce
@@ -90,7 +90,7 @@ const Search = ({ setLoading }) => {
     (e) => {
       if (e.key === "Enter") {
         e.preventDefault();
-        debouncedSubmit(e); // Utiliser debouncedSubmit au lieu de submitHandler
+        debouncedSubmit(e);
       }
     },
     [debouncedSubmit],
@@ -98,7 +98,7 @@ const Search = ({ setLoading }) => {
 
   return (
     <form
-      className="flex flex-nowrap items-end justify-end w-full order-last md:order-none mt-5 md:mt-0 md:w-1/3 lg:w-2/4"
+      className="flex flex-nowrap items-center w-full"
       onSubmit={(e) => {
         e.preventDefault();
         debouncedSubmit(e);
@@ -124,8 +124,8 @@ const Search = ({ setLoading }) => {
           isSubmitting
             ? "bg-blue-400 cursor-not-allowed"
             : "bg-blue-600 hover:bg-blue-700"
-        } text-white rounded-md transition-colors`}
-        onClick={debouncedSubmit} // Utiliser debouncedSubmit ici
+        } text-white rounded-md transition-colors flex-shrink-0`}
+        onClick={debouncedSubmit}
         disabled={isSubmitting}
         aria-label="Lancer la recherche"
       >

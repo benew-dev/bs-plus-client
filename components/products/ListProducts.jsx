@@ -140,10 +140,10 @@ const ListProducts = ({ data, categories }) => {
             {/* Barre Search + Toggle Filters Mobile */}
             <div className="mb-4">
               {/* Mobile: Grid2x2 + Search côte à côte */}
-              <div className="flex items-center gap-2 md:hidden mb-4">
+              <div className="flex items-center justify-between gap-3 md:hidden mb-4">
                 <button
                   onClick={() => setShowMobileFilters(!showMobileFilters)}
-                  className="p-2 border border-gray-200 bg-white rounded-md shadow-sm hover:bg-gray-50 flex-shrink-0"
+                  className="p-2.5 border border-gray-200 bg-white rounded-md shadow-sm hover:bg-gray-50 flex-shrink-0"
                   aria-label="Afficher/Masquer les filtres"
                   aria-expanded={showMobileFilters}
                 >
@@ -154,9 +154,11 @@ const ListProducts = ({ data, categories }) => {
                 </div>
               </div>
 
-              {/* Desktop: Search uniquement */}
-              <div className="hidden md:block">
-                <Search setLoading={setLocalLoading} />
+              {/* Desktop: Search aligné à droite */}
+              <div className="hidden md:flex md:justify-end">
+                <div className="md:w-2/3 lg:w-1/2">
+                  <Search setLoading={setLocalLoading} />
+                </div>
               </div>
             </div>
 
