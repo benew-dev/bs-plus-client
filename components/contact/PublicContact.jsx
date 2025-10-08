@@ -279,19 +279,6 @@ const PublicContact = () => {
           </button>
         </form>
       </div>
-
-      {/* Info supplémentaire */}
-      <div className="mt-8 text-center text-sm text-gray-600">
-        <p>
-          Vous pouvez aussi nous joindre par email à{" "}
-          <a
-            href="mailto:contact@buyitnow.com"
-            className="text-blue-600 hover:underline"
-          >
-            contact@buyitnow.com
-          </a>
-        </p>
-      </div>
     </div>
   );
 };
