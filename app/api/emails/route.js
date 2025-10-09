@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { validateContactMessage } from "@/helpers/validation/schemas/contact";
 import { captureException } from "@/monitoring/sentry";
-import { withApiRateLimit } from "@/utils/rateLimit";
+import { withIntelligentRateLimit } from "@/utils/rateLimit";
 import DOMPurify from "isomorphic-dompurify";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -12,7 +12,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
  * Envoie un email de contact pour les utilisateurs non connectés
  * Rate limit: 2 emails par 30 minutes (protection anti-spam plus strict)
  */
-export const POST = withApiRateLimit(
+export const POST = withIntelligentRateLimit(
   async function (req) {
     try {
       // Parser et valider les données
@@ -230,10 +230,14 @@ Utilisateur: Non inscrit
     }
   },
   {
-    customLimit: {
-      points: 2,
-      duration: 1800000, // 30 minutes
-      blockDuration: 3600000, // 1 heure
+    category: "api",
+    action: "write",
+    customStrategy: {
+      points: 2, // 2 emails maximum
+      duration: 1800000, // par 30 minutes
+      blockDuration: 3600000, // blocage 1h
+      keyStrategy: "ip", // Track par IP (utilisateurs non connectés)
+      requireAuth: false,
     },
   },
 );
