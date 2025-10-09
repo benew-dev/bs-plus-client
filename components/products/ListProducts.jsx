@@ -238,9 +238,9 @@ const ListProducts = ({ data, categories }) => {
             ) : (
               <>
                 <div
-                  className="space-y-4"
+                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
                   aria-busy={false}
-                  aria-label="Liste des produits chargés"
+                  aria-label="Grille des produits"
                 >
                   {data?.products?.map((product) => (
                     <Suspense

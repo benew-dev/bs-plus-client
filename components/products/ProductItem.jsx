@@ -78,7 +78,7 @@ const ProductItem = memo(({ product }) => {
   );
 
   return (
-    <article className="group relative bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 max-w-sm mx-auto">
+    <article className="group relative bg-white rounded-lg shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden border border-gray-100 w-full">
       <Link
         href={`/shop/${productId}`}
         className="block"
@@ -86,7 +86,7 @@ const ProductItem = memo(({ product }) => {
       >
         {/* Badge de stock */}
         {!inStock && (
-          <div className="absolute top-4 left-4 z-10 bg-red-500 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-lg">
+          <div className="absolute top-3 left-3 z-10 bg-red-500 text-white text-xs font-semibold px-2.5 py-1 rounded-full shadow-lg">
             Rupture de stock
           </div>
         )}
@@ -94,13 +94,13 @@ const ProductItem = memo(({ product }) => {
         {/* Bouton Favoris */}
         <button
           onClick={toggleFavoriteHandler}
-          className="absolute top-4 right-4 z-10 bg-white/90 backdrop-blur-sm p-2.5 rounded-full shadow-md hover:bg-white hover:scale-110 transition-all duration-200"
+          className="absolute top-3 right-3 z-10 bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-md hover:bg-white hover:scale-110 transition-all duration-200"
           aria-label={
             isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"
           }
         >
           <Heart
-            className={`w-5 h-5 transition-colors duration-200 ${
+            className={`w-4 h-4 transition-colors duration-200 ${
               isFavorite
                 ? "fill-red-500 stroke-red-500"
                 : "stroke-gray-700 hover:stroke-red-500"
@@ -109,7 +109,7 @@ const ProductItem = memo(({ product }) => {
         </button>
 
         {/* Image du produit */}
-        <div className="relative w-full h-64 bg-gray-50 overflow-hidden">
+        <div className="relative w-full h-48 bg-gray-50 overflow-hidden">
           <Image
             src={imageUrl}
             alt={productName}
@@ -119,7 +119,7 @@ const ProductItem = memo(({ product }) => {
               e.currentTarget.src = "/images/default_product.png";
               e.currentTarget.onerror = null;
             }}
-            className="object-contain group-hover:scale-105 transition-transform duration-500"
+            className="object-contain group-hover:scale-105 transition-transform duration-500 p-2"
             priority={false}
             loading="lazy"
             sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
@@ -127,46 +127,45 @@ const ProductItem = memo(({ product }) => {
         </div>
 
         {/* Contenu du produit */}
-        <div className="p-5 space-y-3">
+        <div className="p-4 space-y-2.5">
           {/* Catégorie */}
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
               {productCategory}
             </span>
           </div>
 
           {/* Nom du produit */}
           <h3
-            className="font-semibold text-lg text-gray-900 line-clamp-2 min-h-[3.5rem] group-hover:text-blue-600 transition-colors"
+            className="font-semibold text-base text-gray-900 line-clamp-2 min-h-[2.5rem] group-hover:text-blue-600 transition-colors"
             title={productName}
           >
             {productName}
           </h3>
 
-          {/* Prix et bouton d'action */}
-          <div className="flex flex-col gap-3 pt-2 border-t border-gray-100">
-            {/* Prix */}
-            <div className="flex items-baseline gap-2">
-              <span className="text-xl font-bold text-gray-900">
-                {new Intl.NumberFormat("fr-FR", {
-                  style: "currency",
-                  currency: "Fdj",
-                }).format(productPrice)}
-              </span>
-            </div>
+          {/* Prix */}
+          <div className="pt-1">
+            <span className="text-xl font-bold text-gray-900">
+              {new Intl.NumberFormat("fr-FR", {
+                style: "currency",
+                currency: "Fdj",
+              }).format(productPrice)}
+            </span>
+          </div>
 
-            {/* Bouton d'ajout au panier - pleine largeur */}
+          {/* Bouton d'ajout au panier */}
+          <div className="pt-3">
             <button
               disabled={!inStock}
               className={`
-                          w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm
-                          transition-all duration-200 shadow-sm
-                          ${
-                            inStock
-                              ? "bg-blue-600 text-white hover:bg-blue-700 hover:shadow-md active:scale-95"
-                              : "bg-gray-200 text-gray-500 cursor-not-allowed"
-                          }
-                        `}
+                w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg font-medium text-sm
+                transition-all duration-200 shadow-sm
+                ${
+                  inStock
+                    ? "bg-blue-600 text-white hover:bg-blue-700 hover:shadow-md active:scale-95"
+                    : "bg-gray-200 text-gray-500 cursor-not-allowed"
+                }
+              `}
               onClick={addToCartHandler}
               aria-label={
                 inStock ? "Ajouter au panier" : "Produit indisponible"
