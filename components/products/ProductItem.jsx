@@ -142,20 +142,18 @@ const ProductItem = memo(({ product }) => {
           >
             {productName}
           </h3>
+          {/* Prix */}
+          <div className="flex items-baseline gap-2">
+            <span className="text-xl font-bold text-gray-900">
+              {new Intl.NumberFormat("fr-FR", {
+                style: "currency",
+                currency: "Fdj",
+              }).format(productPrice)}
+            </span>
+          </div>
 
           {/* Prix et bouton d'action */}
           <div className="flex flex-col gap-3 pt-2 border-t border-gray-100">
-            {/* Prix */}
-            <div className="flex items-baseline gap-2">
-              <span className="text-sm text-gray-500 font-medium">Prix:</span>
-              <span className="text-xl font-bold text-gray-900">
-                {new Intl.NumberFormat("fr-FR", {
-                  style: "currency",
-                  currency: "Fdj",
-                }).format(productPrice)}
-              </span>
-            </div>
-
             {/* Bouton d'ajout au panier - pleine largeur */}
             <button
               disabled={!inStock}
