@@ -7,37 +7,33 @@ import Product from "@/backend/models/product";
 import Category from "@/backend/models/category";
 import Cart from "@/backend/models/cart";
 import { captureException } from "@/monitoring/sentry";
-import { withPaymentRateLimit } from "@/utils/rateLimit";
-
-/**
- * POST /api/orders/webhooks
- * Crée une commande après paiement confirmé
- * Rate limit: 5 commandes par 10 minutes (protection anti-abus strict)
- * Adapté pour ~500 visiteurs/jour
- *import { NextResponse } from "next/server";
-import dbConnect from "@/backend/config/dbConnect";
-import isAuthenticatedUser from "@/backend/middlewares/auth";
-import Order from "@/backend/models/order";
-import User from "@/backend/models/user";
-import Product from "@/backend/models/product";
-import Category from "@/backend/models/category";
-import Cart from "@/backend/models/cart";
-import { captureException } from "@/monitoring/sentry";
-import { withPaymentRateLimit } from "@/utils/rateLimit";
+import { withIntelligentRateLimit } from "@/utils/rateLimit";
+import { getToken } from "next-auth/jwt";
 
 /**
  * POST /api/orders/webhook
  * Crée une commande après paiement confirmé
- * 
- * NOUVEAU RATE LIMITING INTELLIGENT :
- * - 10 webhooks par minute pour les utilisateurs authentifiés
- * - Détection automatique des patterns d'abus
- * - Pas de blocage pour les utilisateurs de confiance
- * - Limites doublées après connexion réussie
- * 
- * Adapté pour ~500 visiteurs/jour avec pics de commandes
+ * Rate limit: 5 commandes par 10 minutes (protection anti-abus strict)
+ * Adapté pour ~500 visiteurs/jour
+ *
+ * Headers de sécurité gérés par next.config.mjs pour /api/orders/* :
+ * - Cache-Control: private, no-cache, no-store, must-revalidate
+ * - Pragma: no-cache
+ * - X-Content-Type-Options: nosniff
+ * - X-Robots-Tag: noindex, nofollow
+ * - X-Download-Options: noopen
+ *
+ * Headers globaux de sécurité (toutes routes) :
+ * - Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+ * - X-Frame-Options: SAMEORIGIN
+ * - Referrer-Policy: strict-origin-when-cross-origin
+ * - Permissions-Policy: [configuration restrictive]
+ * - Content-Security-Policy: [configuration complète]
+ *
+ * Note: Cette route est critique pour le business et utilise des transactions
+ * MongoDB pour garantir la cohérence des données (stock, panier, commande)
  */
-export const POST = withPaymentRateLimit(
+export const POST = withIntelligentRateLimit(
   async function (req) {
     try {
       // 1. Authentification
@@ -268,7 +264,7 @@ export const POST = withPaymentRateLimit(
         // Transaction réussie - Récupérer la commande complète
         const order = await Order.findOne({ user: user._id })
           .sort({ createdAt: -1 })
-          .select("_id orderNumber totalAmount")
+          .select("_id orderNumber")
           .lean();
 
         // Log de sécurité pour audit
@@ -285,6 +281,23 @@ export const POST = withPaymentRateLimit(
             req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
             "unknown",
         });
+
+        // ============================================
+        // NOUVELLE IMPLÉMENTATION : Headers de sécurité
+        //
+        // Les headers sont maintenant gérés de manière centralisée
+        // par next.config.mjs pour garantir la cohérence et la sécurité
+        //
+        // Pour /api/orders/* sont appliqués automatiquement :
+        // - Cache privé uniquement (données sensibles de commande)
+        // - Pas de cache navigateur (no-store, no-cache)
+        // - Protection contre l'indexation (X-Robots-Tag)
+        // - Protection téléchargements (X-Download-Options)
+        // - Protection MIME (X-Content-Type-Options)
+        //
+        // Ces headers garantissent que les données de commande
+        // ne sont jamais mises en cache publiquement ou indexées
+        // ============================================
 
         return NextResponse.json(
           {
@@ -392,7 +405,32 @@ export const POST = withPaymentRateLimit(
     }
   },
   {
-    // Configuration spécifique pour les webhooks de paiement
-    action: "webhook", // Utilise la config payment.webhook (10 req/min, permissif)
+    category: "payment",
+    action: "createOrder", // 5 commandes par 5 minutes
+    extractUserInfo: async (req) => {
+      try {
+        const cookieName =
+          process.env.NODE_ENV === "production"
+            ? "__Secure-next-auth.session-token"
+            : "next-auth.session-token";
+
+        const token = await getToken({
+          req,
+          secret: process.env.NEXTAUTH_SECRET,
+          cookieName,
+        });
+
+        return {
+          userId: token?.user?._id || token?.user?.id || token?.sub,
+          email: token?.user?.email,
+        };
+      } catch (error) {
+        console.error(
+          "[ORDER_WEBHOOK] Error extracting user from JWT:",
+          error.message,
+        );
+        return {};
+      }
+    },
   },
 );

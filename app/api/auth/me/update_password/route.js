@@ -1,18 +1,21 @@
 import { NextResponse } from "next/server";
+import { getToken } from "next-auth/jwt";
 import bcryptjs from "bcryptjs";
 import dbConnect from "@/backend/config/dbConnect";
 import isAuthenticatedUser from "@/backend/middlewares/auth";
 import User from "@/backend/models/user";
 import { validatePasswordUpdate } from "@/helpers/validation/schemas/auth";
 import { captureException } from "@/monitoring/sentry";
-import { withApiRateLimit } from "@/utils/rateLimit";
+import { withIntelligentRateLimit } from "@/utils/rateLimit";
 
 /**
  * PUT /api/auth/me/update_password
  * Met à jour le mot de passe utilisateur avec sécurité renforcée
- * Rate limit: 3 tentatives par heure (protection contre les attaques par force brute)
+ * Rate limit: Configuration intelligente personnalisée (3 tentatives par heure, strict)
+ *
+ * Headers de sécurité gérés par next.config.mjs pour /api/auth/*
  */
-export const PUT = withApiRateLimit(
+export const PUT = withIntelligentRateLimit(
   async function (req) {
     try {
       // Vérifier l'authentification
@@ -244,10 +247,39 @@ export const PUT = withApiRateLimit(
     }
   },
   {
-    customLimit: {
-      points: 3, // 3 tentatives maximum
-      duration: 3600000, // par période d'1 heure
-      blockDuration: 3600000, // blocage d'1 heure en cas de dépassement
+    category: "api",
+    action: "write",
+    customStrategy: {
+      points: 3,
+      duration: 3600000,
+      blockDuration: 3600000,
+      keyStrategy: "user",
+      requireAuth: true,
+    },
+    extractUserInfo: async (req) => {
+      try {
+        const cookieName =
+          process.env.NODE_ENV === "production"
+            ? "__Secure-next-auth.session-token"
+            : "next-auth.session-token";
+
+        const token = await getToken({
+          req,
+          secret: process.env.NEXTAUTH_SECRET,
+          cookieName,
+        });
+
+        return {
+          userId: token?.user?._id || token?.user?.id || token?.sub,
+          email: token?.user?.email,
+        };
+      } catch (error) {
+        console.error(
+          "[UPDATE_PASSWORD] Error extracting user from JWT:",
+          error.message,
+        );
+        return {};
+      }
     },
   },
 );

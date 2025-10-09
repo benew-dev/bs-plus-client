@@ -11,8 +11,9 @@ import { withAuthRateLimit } from "@/utils/rateLimit";
 /**
  * POST /api/auth/reset-password
  * Réinitialise le mot de passe avec un token valide
- * Rate limit: 5 tentatives par 15 minutes par IP (protection contre attaques token)
- * Rate limit global: 10 tentatives par 15 minutes par IP
+ * Rate limit: Configuration intelligente personnalisée (5 tentatives par 15 minutes, protection contre attaques token)
+ *
+ * Headers de sécurité gérés par next.config.mjs pour /api/auth/*
  */
 export const POST = withAuthRateLimit(
   async function (request) {
@@ -322,11 +323,14 @@ export const POST = withAuthRateLimit(
     }
   },
   {
-    // Configuration spécifique pour reset-password
-    customLimit: {
-      points: 5, // 5 tentatives maximum
-      duration: 900000, // par 15 minutes
-      blockDuration: 900000, // blocage de 15 minutes en cas de dépassement
+    action: "passwordReset", // Utilise auth.passwordReset (3/heure, strict)
+    // Optionnel : customStrategy si vous voulez 5 tentatives au lieu de 3
+    customStrategy: {
+      points: 5, // 5 tentatives au lieu de 3
+      duration: 900000, // 15 minutes
+      blockDuration: 900000, // blocage 15 minutes
+      keyStrategy: "ip+email", // Track IP + email (sera extrait du token)
+      requireAuth: false,
     },
   },
 );
