@@ -109,7 +109,7 @@ const ProductItem = memo(({ product }) => {
         </button>
 
         {/* Image du produit */}
-        <div className="relative w-full h-48 bg-gray-50 overflow-hidden">
+        <div className="relative w-full h-48 bg-white overflow-hidden">
           <Image
             src={imageUrl}
             alt={productName}
