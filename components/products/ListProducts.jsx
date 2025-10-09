@@ -83,7 +83,7 @@ const ListProducts = ({ data, categories }) => {
   const handleResetFilters = useCallback(() => {
     try {
       setLocalLoading(true);
-      router.push("/");
+      router.push("/shop");
     } catch (err) {
       console.error(err);
       throw err;
