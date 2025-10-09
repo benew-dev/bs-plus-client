@@ -58,7 +58,7 @@ const ProductItem = memo(({ product }) => {
   return (
     <article className="border border-gray-200 overflow-hidden bg-white shadow-xs rounded-sm mb-5">
       <Link
-        href={`/product/${productId}`}
+        href={`/shop/${productId}`}
         className="flex flex-col md:flex-row hover:bg-blue-50"
         aria-label={`Voir les détails du produit: ${productName}`}
       >
