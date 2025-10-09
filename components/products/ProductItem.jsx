@@ -1,7 +1,10 @@
-import { memo, useCallback, useContext } from "react";
+"use client";
+
+import { memo, useCallback, useContext, useState } from "react";
 import { toast } from "react-toastify";
 import Link from "next/link";
 import Image from "next/image";
+import { Heart, ShoppingCart } from "lucide-react";
 
 import CartContext from "@/context/CartContext";
 import { INCREASE } from "@/helpers/constants";
@@ -10,6 +13,7 @@ import AuthContext from "@/context/AuthContext";
 const ProductItem = memo(({ product }) => {
   const { addItemToCart, updateCart, cart } = useContext(CartContext);
   const { user } = useContext(AuthContext);
+  const [isFavorite, setIsFavorite] = useState(false);
 
   // Vérification de sécurité pour s'assurer que product est un objet valide
   if (!product || typeof product !== "object") {
@@ -19,17 +23,17 @@ const ProductItem = memo(({ product }) => {
   const inStock = product.stock > 0;
   const productId = product._id || "";
   const productName = product.name || "Produit sans nom";
-  const productDescription = product.description || "";
   const productPrice = product.price || 0;
   const productCategory = product.category?.categoryName || "Non catégorisé";
 
   // URL de l'image avec fallback
   const imageUrl = product.images?.[0]?.url || "/images/default_product.png";
 
-  // Optimisation avec useCallback pour éviter les recréations à chaque rendu
+  // Handler pour ajouter au panier
   const addToCartHandler = useCallback(
     (e) => {
       e.preventDefault();
+      e.stopPropagation();
 
       try {
         if (!user) {
@@ -52,77 +56,128 @@ const ProductItem = memo(({ product }) => {
         console.error("Erreur d'ajout au panier:", error);
       }
     },
-    [user, cart, productId],
+    [user, cart, productId, updateCart, addItemToCart],
+  );
+
+  // Handler pour les favoris
+  const toggleFavoriteHandler = useCallback(
+    (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (!user) {
+        return toast.error(
+          "Connectez-vous pour ajouter des produits à vos favoris !",
+        );
+      }
+
+      setIsFavorite(!isFavorite);
+      toast.success(isFavorite ? "Retiré des favoris" : "Ajouté aux favoris");
+    },
+    [user, isFavorite],
   );
 
   return (
-    <article className="border border-gray-200 overflow-hidden bg-white shadow-xs rounded-sm mb-5">
+    <article className="group relative bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
       <Link
         href={`/shop/${productId}`}
-        className="flex flex-col md:flex-row hover:bg-blue-50"
+        className="block"
         aria-label={`Voir les détails du produit: ${productName}`}
       >
-        <div className="md:w-1/4 flex p-3">
-          <div className="relative w-full aspect-square">
-            <Image
-              src={imageUrl}
-              alt={productName}
-              title={productName}
-              width={240}
-              height={240}
-              onError={(e) => {
-                e.currentTarget.src = "/images/default_product.png";
-                e.currentTarget.onerror = null;
-              }}
-              style={{ objectFit: "contain" }}
-              priority={false}
-              loading="lazy"
-              sizes="(max-width: 768px) 80vw, 240px"
-            />
+        {/* Badge de stock */}
+        {!inStock && (
+          <div className="absolute top-4 left-4 z-10 bg-red-500 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-lg">
+            Rupture de stock
           </div>
-        </div>
-        <div className="md:w-2/4">
-          <div className="p-4">
-            <h3
-              className="font-semibold text-xl text-gray-800 line-clamp-2"
-              title={productName}
-            >
-              {productName}
-            </h3>
-            <div className="mt-4 md:text-xs lg:text-sm text-gray-700">
-              <p className="mb-1" title={productCategory}>
-                <span className="font-semibold mr-3">Catégorie: </span>
-                <span>{productCategory}</span>
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="md:w-1/4 border-t lg:border-t-0 lg:border-l border-gray-200">
-          <div className="p-5">
-            <span
-              className="text-xl font-semibold text-black flex items-center justify-center md:justify-start"
-              data-testid="Price"
-            >
-              {new Intl.NumberFormat("fr-FR", {
-                style: "currency",
-                currency: "Fdj",
-              }).format(productPrice)}
-            </span>
+        )}
 
-            <div className="my-3 flex justify-center md:justify-start">
-              <button
-                disabled={!inStock}
-                className={`px-2 lg:px-4 py-2 inline-block md:text-xs lg:text-sm text-white rounded-md hover:bg-blue-700 transition
-                  ${inStock ? "bg-blue-600" : "bg-gray-400 cursor-not-allowed"}`}
-                onClick={(e) => inStock && addToCartHandler(e)}
-                aria-label={
-                  inStock ? "Ajouter au panier" : "Produit indisponible"
-                }
-                aria-disabled={!inStock}
-              >
-                {inStock ? "Ajouter au panier" : "Indisponible"}
-              </button>
+        {/* Bouton Favoris */}
+        <button
+          onClick={toggleFavoriteHandler}
+          className="absolute top-4 right-4 z-10 bg-white/90 backdrop-blur-sm p-2.5 rounded-full shadow-md hover:bg-white hover:scale-110 transition-all duration-200"
+          aria-label={
+            isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"
+          }
+        >
+          <Heart
+            className={`w-5 h-5 transition-colors duration-200 ${
+              isFavorite
+                ? "fill-red-500 stroke-red-500"
+                : "stroke-gray-700 hover:stroke-red-500"
+            }`}
+          />
+        </button>
+
+        {/* Image du produit */}
+        <div className="relative w-full aspect-square bg-gray-50 overflow-hidden">
+          <Image
+            src={imageUrl}
+            alt={productName}
+            title={productName}
+            fill
+            onError={(e) => {
+              e.currentTarget.src = "/images/default_product.png";
+              e.currentTarget.onerror = null;
+            }}
+            className="object-cover group-hover:scale-105 transition-transform duration-500"
+            priority={false}
+            loading="lazy"
+            sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+          />
+        </div>
+
+        {/* Contenu du produit */}
+        <div className="p-5 space-y-3">
+          {/* Catégorie */}
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
+              {productCategory}
+            </span>
+          </div>
+
+          {/* Nom du produit */}
+          <h3
+            className="font-semibold text-lg text-gray-900 line-clamp-2 min-h-[3.5rem] group-hover:text-blue-600 transition-colors"
+            title={productName}
+          >
+            {productName}
+          </h3>
+
+          {/* Prix et bouton d'action */}
+          <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+            <div className="flex flex-col">
+              <span className="text-sm text-gray-500 font-medium">Prix</span>
+              <span className="text-2xl font-bold text-gray-900">
+                {new Intl.NumberFormat("fr-FR", {
+                  style: "currency",
+                  currency: "Fdj",
+                }).format(productPrice)}
+              </span>
             </div>
+
+            {/* Bouton d'ajout au panier */}
+            <button
+              disabled={!inStock}
+              className={`
+                group/btn flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm
+                transition-all duration-200 shadow-sm
+                ${
+                  inStock
+                    ? "bg-blue-600 text-white hover:bg-blue-700 hover:shadow-md active:scale-95"
+                    : "bg-gray-200 text-gray-500 cursor-not-allowed"
+                }
+              `}
+              onClick={addToCartHandler}
+              aria-label={
+                inStock ? "Ajouter au panier" : "Produit indisponible"
+              }
+              aria-disabled={!inStock}
+            >
+              <ShoppingCart className="w-4 h-4" />
+              <span className="hidden sm:inline">
+                {inStock ? "Ajouter" : "Indisponible"}
+              </span>
+            </button>
           </div>
         </div>
       </Link>
