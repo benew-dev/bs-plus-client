@@ -94,24 +94,6 @@ const ProductItem = memo(({ product }) => {
                 <span className="font-semibold mr-3">Catégorie: </span>
                 <span>{productCategory}</span>
               </p>
-              <p className="mb-1" title="Description">
-                <span className="font-semibold mr-3">Description: </span>
-                <span className="line-clamp-2">
-                  {productDescription
-                    ? productDescription.substring(0, 45) + "..."
-                    : "Aucune description disponible"}
-                </span>
-              </p>
-              <p className="mb-1" title="Stock">
-                <span className="font-semibold mr-3">Stock: </span>
-                {inStock ? (
-                  <span className="text-green-700 font-medium">En stock</span>
-                ) : (
-                  <span className="text-red-700 font-medium">
-                    Rupture de stock
-                  </span>
-                )}
-              </p>
             </div>
           </div>
         </div>
@@ -127,12 +109,6 @@ const ProductItem = memo(({ product }) => {
               }).format(productPrice)}
             </span>
 
-            <p
-              className="text-green-700 md:text-xs lg:text-sm text-center md:text-left"
-              title="Livraison gratuite"
-            >
-              Livraison gratuite
-            </p>
             <div className="my-3 flex justify-center md:justify-start">
               <button
                 disabled={!inStock}
