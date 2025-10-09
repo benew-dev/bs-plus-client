@@ -78,7 +78,7 @@ const ProductItem = memo(({ product }) => {
   );
 
   return (
-    <article className="group relative bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
+    <article className="group relative bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 max-w-sm mx-auto">
       <Link
         href={`/shop/${productId}`}
         className="block"
@@ -109,7 +109,7 @@ const ProductItem = memo(({ product }) => {
         </button>
 
         {/* Image du produit */}
-        <div className="relative w-full aspect-square bg-gray-50 overflow-hidden">
+        <div className="relative w-full h-64 bg-gray-50 overflow-hidden">
           <Image
             src={imageUrl}
             alt={productName}
@@ -119,7 +119,7 @@ const ProductItem = memo(({ product }) => {
               e.currentTarget.src = "/images/default_product.png";
               e.currentTarget.onerror = null;
             }}
-            className="object-cover group-hover:scale-105 transition-transform duration-500"
+            className="object-contain group-hover:scale-105 transition-transform duration-500"
             priority={false}
             loading="lazy"
             sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
@@ -144,10 +144,11 @@ const ProductItem = memo(({ product }) => {
           </h3>
 
           {/* Prix et bouton d'action */}
-          <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-            <div className="flex flex-col">
-              <span className="text-sm text-gray-500 font-medium">Prix</span>
-              <span className="text-2xl font-bold text-gray-900">
+          <div className="flex flex-col gap-3 pt-2 border-t border-gray-100">
+            {/* Prix */}
+            <div className="flex items-baseline gap-2">
+              <span className="text-sm text-gray-500 font-medium">Prix:</span>
+              <span className="text-xl font-bold text-gray-900">
                 {new Intl.NumberFormat("fr-FR", {
                   style: "currency",
                   currency: "Fdj",
@@ -155,18 +156,18 @@ const ProductItem = memo(({ product }) => {
               </span>
             </div>
 
-            {/* Bouton d'ajout au panier */}
+            {/* Bouton d'ajout au panier - pleine largeur */}
             <button
               disabled={!inStock}
               className={`
-                group/btn flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm
-                transition-all duration-200 shadow-sm
-                ${
-                  inStock
-                    ? "bg-blue-600 text-white hover:bg-blue-700 hover:shadow-md active:scale-95"
-                    : "bg-gray-200 text-gray-500 cursor-not-allowed"
-                }
-              `}
+                          w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm
+                          transition-all duration-200 shadow-sm
+                          ${
+                            inStock
+                              ? "bg-blue-600 text-white hover:bg-blue-700 hover:shadow-md active:scale-95"
+                              : "bg-gray-200 text-gray-500 cursor-not-allowed"
+                          }
+                        `}
               onClick={addToCartHandler}
               aria-label={
                 inStock ? "Ajouter au panier" : "Produit indisponible"
@@ -174,9 +175,7 @@ const ProductItem = memo(({ product }) => {
               aria-disabled={!inStock}
             >
               <ShoppingCart className="w-4 h-4" />
-              <span className="hidden sm:inline">
-                {inStock ? "Ajouter" : "Indisponible"}
-              </span>
+              <span>{inStock ? "Ajouter au panier" : "Indisponible"}</span>
             </button>
           </div>
         </div>
