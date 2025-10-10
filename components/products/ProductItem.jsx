@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback, useContext, useState } from "react";
+import { memo, useCallback, useContext, useMemo } from "react";
 import { toast } from "react-toastify";
 import Link from "next/link";
 import Image from "next/image";
@@ -13,12 +13,21 @@ import AuthContext from "@/context/AuthContext";
 const ProductItem = memo(({ product }) => {
   const { addItemToCart, updateCart, cart } = useContext(CartContext);
   const { user, toggleFavorite } = useContext(AuthContext); // ✅ Ajouter toggleFavorite
-  const [isFavorite, setIsFavorite] = useState(false);
 
   // Vérification de sécurité pour s'assurer que product est un objet valide
   if (!product || typeof product !== "object") {
     return null;
   }
+
+  // ✅ Calculer si le produit est dans les favoris
+  const isFavorite = useMemo(() => {
+    if (!user || !user.favorites || !Array.isArray(user.favorites)) {
+      return false;
+    }
+    return user.favorites.some(
+      (fav) => fav.productId?.toString() === productId,
+    );
+  }, [user, productId]);
 
   const inStock = product.stock > 0;
   const productId = product._id || "";
@@ -72,12 +81,7 @@ const ProductItem = memo(({ product }) => {
       }
 
       // Appeler la méthode du context
-      const result = await toggleFavorite(productId, productName);
-
-      if (result.success) {
-        // Mettre à jour l'état local selon la réponse
-        setIsFavorite(result.isFavorite);
-      }
+      await toggleFavorite(productId, productName);
     },
     [user, productId, productName, toggleFavorite],
   );
@@ -99,7 +103,9 @@ const ProductItem = memo(({ product }) => {
         {/* Bouton Favoris */}
         <button
           onClick={toggleFavoriteHandler}
-          className="absolute top-3 right-3 z-10 bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-md hover:bg-white hover:scale-110 transition-all duration-200"
+          className={`absolute top-3 right-3 z-10 backdrop-blur-sm p-2 rounded-full shadow-md hover:scale-110 transition-all duration-200 ${
+            isFavorite ? "bg-pink-50" : "bg-white/90 hover:bg-white"
+          }`}
           aria-label={
             isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"
           }
@@ -107,8 +113,8 @@ const ProductItem = memo(({ product }) => {
           <Heart
             className={`w-4 h-4 transition-colors duration-200 ${
               isFavorite
-                ? "fill-red-500 stroke-red-500"
-                : "stroke-gray-700 hover:stroke-red-500"
+                ? "fill-pink-500 stroke-pink-500"
+                : "stroke-gray-700 hover:stroke-pink-500"
             }`}
           />
         </button>
