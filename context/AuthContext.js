@@ -364,6 +364,131 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const toggleFavorite = async (productId, productName, action = "toggle") => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Validation basique
+      if (!productId) {
+        const validationError = new Error("L'ID du produit est obligatoire");
+        console.error(validationError, "AuthContext", "toggleFavorite", false);
+        setError("L'ID du produit est obligatoire");
+        setLoading(false);
+        return { success: false };
+      }
+
+      // Simple fetch avec timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/auth/me/favorites`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({
+            productId,
+            productName,
+            action, // 'add', 'remove', ou 'toggle'
+          }),
+          signal: controller.signal,
+          credentials: "include",
+        },
+      );
+
+      clearTimeout(timeoutId);
+      const data = await res.json();
+
+      // Gestion des erreurs
+      if (!res.ok) {
+        let errorMessage = "";
+        switch (res.status) {
+          case 400:
+            errorMessage = data.message || "Données invalides";
+            break;
+          case 401:
+            errorMessage = "Session expirée. Veuillez vous reconnecter";
+            setTimeout(() => router.push("/login"), 2000);
+            break;
+          case 404:
+            errorMessage = "Produit ou utilisateur non trouvé";
+            break;
+          case 429:
+            errorMessage = "Trop de tentatives. Réessayez plus tard.";
+            break;
+          default:
+            errorMessage = data.message || "Erreur lors de l'opération";
+        }
+
+        // Monitoring pour erreurs HTTP
+        const httpError = new Error(`HTTP ${res.status}: ${errorMessage}`);
+        const isCritical = res.status === 401;
+        console.error(httpError, "AuthContext", "toggleFavorite", isCritical);
+
+        setError(errorMessage);
+        setLoading(false);
+        return { success: false, error: errorMessage };
+      }
+
+      // Succès
+      if (data.success) {
+        // Mettre à jour l'utilisateur avec les nouveaux favoris si retournés
+        if (data.data?.favorites) {
+          const updatedUser = {
+            ...user,
+            favorites: data.data.favorites,
+          };
+          setUser(updatedUser);
+
+          // Synchroniser avec la session
+          if (updateSession && typeof updateSession === "function") {
+            try {
+              await updateSession({
+                user: updatedUser,
+              });
+            } catch (error) {
+              console.warn("Failed to update session:", error);
+            }
+          }
+        }
+
+        // Toast de succès selon l'action
+        const isAdded = data.data?.action === "added";
+        toast.success(
+          isAdded
+            ? `${productName} ajouté aux favoris`
+            : `${productName} retiré des favoris`,
+        );
+
+        setLoading(false);
+        return {
+          success: true,
+          isFavorite: isAdded,
+          favorites: data.data?.favorites || [],
+        };
+      }
+    } catch (error) {
+      // Erreurs réseau/système
+      if (error.name === "AbortError") {
+        setError("La requête a pris trop de temps");
+        console.error(error, "AuthContext", "toggleFavorite", false);
+      } else {
+        setError("Problème de connexion. Vérifiez votre connexion.");
+        console.error(error, "AuthContext", "toggleFavorite", true);
+      }
+
+      console.error("Toggle favorite error:", error.message);
+      setLoading(false);
+      return { success: false, error: error.message };
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const sendEmail = async ({ name, email, subject, message }) => {
     try {
       setLoading(true);
@@ -564,6 +689,7 @@ export const AuthProvider = ({ children }) => {
         registerUser,
         updateProfile,
         updatePassword,
+        toggleFavorite,
         sendEmail,
         clearUser,
         clearErrors,

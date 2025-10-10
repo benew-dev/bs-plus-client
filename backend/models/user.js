@@ -143,6 +143,34 @@ const userSchema = new mongoose.Schema(
       default: "user",
       index: true, // Indexation pour accélérer les requêtes par rôle
     },
+    favorites: {
+      type: [
+        {
+          productId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Product",
+            required: true,
+          },
+          productName: {
+            type: String,
+            required: true,
+            trim: true,
+          },
+          addedAt: {
+            type: Date,
+            default: Date.now,
+          },
+        },
+      ],
+      default: [],
+      validate: {
+        validator: function (favorites) {
+          // Limiter le nombre de favoris à 100 max
+          return favorites.length <= 100;
+        },
+        message: "Maximum 100 favorites allowed",
+      },
+    },
     lastLogin: {
       type: Date,
       default: null,

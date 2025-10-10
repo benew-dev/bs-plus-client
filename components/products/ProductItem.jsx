@@ -12,7 +12,7 @@ import AuthContext from "@/context/AuthContext";
 
 const ProductItem = memo(({ product }) => {
   const { addItemToCart, updateCart, cart } = useContext(CartContext);
-  const { user } = useContext(AuthContext);
+  const { user, toggleFavorite } = useContext(AuthContext); // ✅ Ajouter toggleFavorite
   const [isFavorite, setIsFavorite] = useState(false);
 
   // Vérification de sécurité pour s'assurer que product est un objet valide
@@ -61,7 +61,7 @@ const ProductItem = memo(({ product }) => {
 
   // Handler pour les favoris
   const toggleFavoriteHandler = useCallback(
-    (e) => {
+    async (e) => {
       e.preventDefault();
       e.stopPropagation();
 
@@ -71,10 +71,15 @@ const ProductItem = memo(({ product }) => {
         );
       }
 
-      setIsFavorite(!isFavorite);
-      toast.success(isFavorite ? "Retiré des favoris" : "Ajouté aux favoris");
+      // Appeler la méthode du context
+      const result = await toggleFavorite(productId, productName);
+
+      if (result.success) {
+        // Mettre à jour l'état local selon la réponse
+        setIsFavorite(result.isFavorite);
+      }
     },
-    [user, isFavorite],
+    [user, productId, productName, toggleFavorite],
   );
 
   return (
