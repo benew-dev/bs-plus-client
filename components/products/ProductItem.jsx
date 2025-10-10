@@ -19,6 +19,15 @@ const ProductItem = memo(({ product }) => {
     return null;
   }
 
+  const inStock = product.stock > 0;
+  const productId = product._id || "";
+  const productName = product.name || "Produit sans nom";
+  const productPrice = product.price || 0;
+  const productCategory = product.category?.categoryName || "Non catégorisé";
+
+  // URL de l'image avec fallback
+  const imageUrl = product.images?.[0]?.url || "/images/default_product.png";
+
   // ✅ Calculer si le produit est dans les favoris
   const isFavorite = useMemo(() => {
     if (!user || !user.favorites || !Array.isArray(user.favorites)) {
@@ -28,15 +37,6 @@ const ProductItem = memo(({ product }) => {
       (fav) => fav.productId?.toString() === productId,
     );
   }, [user, productId]);
-
-  const inStock = product.stock > 0;
-  const productId = product._id || "";
-  const productName = product.name || "Produit sans nom";
-  const productPrice = product.price || 0;
-  const productCategory = product.category?.categoryName || "Non catégorisé";
-
-  // URL de l'image avec fallback
-  const imageUrl = product.images?.[0]?.url || "/images/default_product.png";
 
   // Handler pour ajouter au panier
   const addToCartHandler = useCallback(
