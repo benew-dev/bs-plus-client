@@ -124,11 +124,24 @@ const FavoriteProducts = () => {
             className="group bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-300"
           >
             <Link href={`/shop/${favorite.productId}`} className="block">
-              {/* Image placeholder */}
-              <div className="relative w-full h-48 bg-gray-100 overflow-hidden">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <Package className="w-16 h-16 text-gray-300" />
-                </div>
+              {/* Image du produit */}
+              <div className="relative w-full h-48 bg-gray-50 overflow-hidden">
+                {favorite.productImage?.url ? (
+                  <Image
+                    src={favorite.productImage.url}
+                    alt={favorite.productName}
+                    fill
+                    className="object-contain group-hover:scale-105 transition-transform duration-500 p-2"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    onError={(e) => {
+                      e.currentTarget.src = "/images/default_product.png";
+                    }}
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+                    <Package className="w-16 h-16 text-gray-300" />
+                  </div>
+                )}
               </div>
 
               {/* Contenu */}

@@ -80,10 +80,16 @@ const ProductItem = memo(({ product }) => {
         );
       }
 
+      // ✅ MODIFICATION: Préparer l'image du produit
+      const productImage = product.images?.[0] || {
+        public_id: null,
+        url: null,
+      };
+
       // Appeler la méthode du context
-      await toggleFavorite(productId, productName);
+      await toggleFavorite(productId, productName, productImage);
     },
-    [user, productId, productName, toggleFavorite],
+    [user, productId, productName, product.images, toggleFavorite],
   );
 
   return (

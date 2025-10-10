@@ -112,7 +112,7 @@ export const POST = withIntelligentRateLimit(
 
       // Vérifier que le produit existe et est actif
       const product = await Product.findById(productId)
-        .select("_id name isActive")
+        .select("_id name isActive images")
         .lean();
 
       if (!product) {
@@ -136,6 +136,12 @@ export const POST = withIntelligentRateLimit(
           { status: 400 },
         );
       }
+
+      // ✅ NOUVEAU: Extraire la première image
+      const productImage = product.images?.[0] || {
+        public_id: null,
+        url: null,
+      };
 
       // Initialiser favorites si undefined
       if (!user.favorites) {
@@ -164,6 +170,7 @@ export const POST = withIntelligentRateLimit(
           user.favorites.push({
             productId,
             productName: productName.trim(),
+            productImage, // ✅ AJOUT DE L'IMAGE
           });
           actionPerformed = "added";
           message = "Product added to favorites";
@@ -183,6 +190,7 @@ export const POST = withIntelligentRateLimit(
         user.favorites.push({
           productId,
           productName: productName.trim(),
+          productImage, // ✅ AJOUT DE L'IMAGE
         });
         actionPerformed = "added";
         message = "Product added to favorites";

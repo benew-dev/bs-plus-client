@@ -364,7 +364,12 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const toggleFavorite = async (productId, productName, action = "toggle") => {
+  const toggleFavorite = async (
+    productId,
+    productName,
+    productImage,
+    action = "toggle",
+  ) => {
     try {
       setLoading(true);
       setError(null);
@@ -393,6 +398,7 @@ export const AuthProvider = ({ children }) => {
           body: JSON.stringify({
             productId,
             productName,
+            productImage, // ✅ AJOUT
             action, // 'add', 'remove', ou 'toggle'
           }),
           signal: controller.signal,

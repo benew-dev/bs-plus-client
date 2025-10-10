@@ -156,6 +156,17 @@ const userSchema = new mongoose.Schema(
             required: true,
             trim: true,
           },
+          productImage: {
+            // ✅ NOUVEAU CHAMP
+            public_id: {
+              type: String,
+              default: null,
+            },
+            url: {
+              type: String,
+              default: null,
+            },
+          },
           addedAt: {
             type: Date,
             default: Date.now,
