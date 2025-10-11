@@ -53,7 +53,7 @@ const Login = ({ csrfToken }) => {
       const offlineError = new Error("Tentative de connexion hors ligne");
       console.error(offlineError, "Login", "submit", false);
       toast.error(
-        "Vous semblez être hors ligne. Veuillez vérifier votre connexion internet."
+        "Vous semblez être hors ligne. Veuillez vérifier votre connexion internet.",
       );
       return;
     }
@@ -98,13 +98,13 @@ const Login = ({ csrfToken }) => {
           errorType = "rate_limit";
           isCritical = true; // Peut indiquer une attaque
           toast.error(
-            "Trop de tentatives de connexion. Veuillez réessayer ultérieurement."
+            "Trop de tentatives de connexion. Veuillez réessayer ultérieurement.",
           );
         } else if (data.error.includes("locked")) {
           errorType = "account_locked";
           isCritical = true;
           toast.error(
-            "Votre compte est temporairement verrouillé suite à plusieurs tentatives."
+            "Votre compte est temporairement verrouillé suite à plusieurs tentatives.",
           );
         } else if (
           data.error.toLowerCase().includes("email") ||
@@ -113,7 +113,7 @@ const Login = ({ csrfToken }) => {
           errorType = "invalid_credentials";
           isCritical = false; // Erreur normale
           toast.error(
-            "Identifiants incorrects. Veuillez vérifier votre email et mot de passe."
+            "Identifiants incorrects. Veuillez vérifier votre email et mot de passe.",
           );
         } else {
           errorType = "unknown";

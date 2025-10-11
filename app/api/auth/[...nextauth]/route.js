@@ -138,7 +138,7 @@ const authOptions = {
 
   callbacks: {
     // Callback JWT enrichi
-    jwt: async ({ token, user }) => {
+    jwt: async ({ token, user, trigger, session }) => {
       if (user) {
         token.user = {
           _id: user._id,
@@ -178,6 +178,51 @@ const authOptions = {
       // Marquer que ce n'est plus une nouvelle connexion après 5 secondes
       if (token.loginTime && Date.now() - token.loginTime > 5000) {
         token.isNewLogin = false;
+      }
+
+      // ✅ IMPORTANT: Gérer le trigger "update"
+      if (trigger === "update" && session) {
+        token.user = {
+          // Mettre à jour le token avec les nouvelles données
+          name: session.name || token.user.name,
+          phone: session.phone || token.user.phone,
+          avatar: session.avatar || token.user.avatar,
+          address: session.address || token.user.address,
+          favorites: session.favorites || token.user.favorites,
+          _id: token.user._id,
+          email: token.user.email,
+          role: token.user.role,
+          isActive: token.user.isActive,
+          lastLogin: token.user.lastLogin,
+          createdAt: token.user.createdAt,
+        };
+
+        // Récupérer les données fraîches de la DB
+        if (token.user._id) {
+          try {
+            await dbConnect();
+            const freshUser = await User.findById(token.user._id).select(
+              "-password",
+            );
+            if (freshUser) {
+              token.user = {
+                _id: freshUser._id,
+                name: freshUser.name,
+                email: freshUser.email,
+                phone: freshUser.phone,
+                address: freshUser.address,
+                favorites: freshUser.favorites,
+                role: freshUser.role,
+                avatar: freshUser.avatar,
+                isActive: freshUser.isActive,
+                lastLogin: freshUser.lastLogin,
+                createdAt: freshUser.createdAt,
+              };
+            }
+          } catch (error) {
+            console.error("Error fetching fresh user data:", error);
+          }
+        }
       }
 
       return token;
