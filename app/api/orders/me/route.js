@@ -24,7 +24,6 @@ import { getToken } from "next-auth/jwt";
 export const GET = withIntelligentRateLimit(
   async function (req) {
     try {
-      console.log("We are getting single user's orders");
       // Vérifier l'authentification
       await isAuthenticatedUser(req, NextResponse);
 
@@ -37,8 +36,6 @@ export const GET = withIntelligentRateLimit(
       const user = await User.findOne({ email: req.user.email })
         .select("_id name email phone isActive")
         .lean();
-
-      console.log("user found", user);
 
       if (!user) {
         return NextResponse.json(
@@ -90,24 +87,19 @@ export const GET = withIntelligentRateLimit(
       const ordersCount = await Order.countDocuments({
         "user.userId": user._id,
       });
-      console.log("Total Orders", ordersCount);
 
       const ordersPaidCount = await Order.countDocuments({
         "user.userId": user._id,
         paymentStatus: "paid",
       });
-      console.log("Total Orders Paid", ordersPaidCount);
 
       const ordersUnpaidCount = await Order.countDocuments({
         "user.userId": user._id,
         paymentStatus: "unpaid",
       });
-      console.log("Total Orders Unpaid", ordersUnpaidCount);
 
       // Total de toutes les commandes d'un utilisateur (tous statuts confondus)
       const totalAmountOrders = await Order.getTotalAmountByUser(user._id);
-
-      console.log("Total Amount of all orders", totalAmountOrders);
 
       // Si aucune commande trouvée
       if (ordersCount === 0) {
@@ -148,8 +140,6 @@ export const GET = withIntelligentRateLimit(
         )
         .sort({ createdAt: -1 })
         .lean();
-
-      console.log("All data for orders", orders);
 
       // Calculer le nombre de pages
       const totalPages = Math.ceil(ordersCount / resPerPage);
