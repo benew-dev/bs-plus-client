@@ -12,7 +12,7 @@ const FavoriteProducts = () => {
   const { user, toggleFavorite } = useContext(AuthContext);
   const { addItemToCart } = useContext(CartContext);
   const [isClient, setIsClient] = useState(false);
-  const [removingId, setRemovingId] = useState(null);
+  const [removingIds, setRemovingIds] = useState(null);
 
   useEffect(() => {
     setIsClient(true);
@@ -20,12 +20,16 @@ const FavoriteProducts = () => {
 
   const handleRemoveFavorite = async (productId, productName) => {
     try {
-      setRemovingId(productId);
+      setRemovingIds((prev) => new Set(prev).add(productId)); // ✅ Ajouter
       await toggleFavorite(productId, productName, "remove");
     } catch (error) {
       console.error("Error removing favorite:", error);
     } finally {
-      setRemovingId(null);
+      setRemovingIds((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(productId); // ✅ Retirer
+        return newSet;
+      });
     }
   };
 
@@ -183,11 +187,11 @@ const FavoriteProducts = () => {
                         favorite.productName,
                       );
                     }}
-                    disabled={removingId === favorite.productId}
+                    disabled={removingIds.has(favorite.productId)} // ✅ Utiliser .has()
                     className="p-2 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     aria-label="Retirer des favoris"
                   >
-                    {removingId === favorite.productId ? (
+                    {removingIds === favorite.productId ? (
                       <div className="w-5 h-5 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
                     ) : (
                       <Trash2 className="w-5 h-5" />

@@ -100,6 +100,7 @@ export const PUT = withIntelligentRateLimit(
               address: updatedUser.address, // NOUVEAU
               role: updatedUser.role,
               isActive: updatedUser.isActive || false,
+              favorites: updatedUser.favorites, // ✅ AJOUTER SI ABSENT
             },
           },
         },

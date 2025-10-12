@@ -15,12 +15,9 @@ export const AuthProvider = ({ children }) => {
 
   const router = useRouter();
   // ✅ MODIFICATION: Gestion sécurisée de useSession
-  // eslint-disable-next-line no-unused-vars
   const { data: session, update: updateSession } = useSession();
 
   // ✅ NOUVELLE fonction pour synchroniser l'utilisateur avec session complète
-  // 1. METTRE À JOUR syncUserWithSession pour inclure l'adresse :
-
   const syncUserWithSession = async (updatedUserData) => {
     const currentUser = user;
 
@@ -31,6 +28,7 @@ export const AuthProvider = ({ children }) => {
       phone: updatedUserData.phone || currentUser?.phone,
       avatar: updatedUserData.avatar || currentUser?.avatar,
       address: updatedUserData.address || currentUser?.address, // ✅ AJOUT
+      favorites: updatedUserData.favorites || currentUser?.favorites, // ✅ AJOUT FAVORIS
     };
 
     console.log("Syncing user with session:", {
@@ -150,6 +148,7 @@ export const AuthProvider = ({ children }) => {
         name: name.trim(),
         phone: phone ? phone.trim() : "",
         avatar,
+        address,
       };
 
       // Simple fetch avec timeout court
@@ -249,8 +248,6 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
     }
   };
-
-  // ... resto des méthodes inchangées
 
   const updatePassword = async ({
     currentPassword,
@@ -372,6 +369,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // ✅ FAVORIS : Synchronisation instantanée optimisée
   const toggleFavorite = async (
     productId,
     productName,
@@ -379,7 +377,6 @@ export const AuthProvider = ({ children }) => {
     action = "toggle",
   ) => {
     try {
-      setLoading(true);
       setError(null);
 
       // Validation basique
@@ -387,8 +384,58 @@ export const AuthProvider = ({ children }) => {
         const validationError = new Error("L'ID du produit est obligatoire");
         console.error(validationError, "AuthContext", "toggleFavorite", false);
         setError("L'ID du produit est obligatoire");
-        setLoading(false);
         return { success: false };
+      }
+
+      // ✅ MODIFICATION: Déterminer l'action et mettre à jour localement en premier
+      const currentFavorites = user?.favorites || [];
+      const favoriteIndex = currentFavorites.findIndex(
+        (fav) => fav.productId?.toString() === productId,
+      );
+      const isCurrentlyInFavorites = favoriteIndex !== -1;
+
+      let actionToPerform = action;
+      if (action === "toggle") {
+        actionToPerform = isCurrentlyInFavorites ? "remove" : "add";
+      }
+
+      // ✅ Mettre à jour l'UI immédiatement (optimistic update)
+      let updatedFavorites;
+      if (actionToPerform === "add") {
+        updatedFavorites = [
+          ...currentFavorites,
+          {
+            productId,
+            productName: productName.trim(),
+            productImage: productImage || { public_id: null, url: null },
+          },
+        ];
+      } else if (actionToPerform === "remove") {
+        updatedFavorites = currentFavorites.filter(
+          (fav) => fav.productId?.toString() !== productId,
+        );
+      } else {
+        updatedFavorites = currentFavorites;
+      }
+
+      // Mettre à jour l'état local et la session immédiatement
+      const updatedUser = {
+        ...user,
+        favorites: updatedFavorites,
+      };
+
+      setUser(updatedUser);
+
+      // Synchroniser avec la session NextAuth immédiatement
+      if (updateSession && typeof updateSession === "function") {
+        try {
+          await updateSession({
+            user: updatedUser,
+          });
+          console.log("Session updated with new favorites");
+        } catch (error) {
+          console.warn("Failed to update session:", error);
+        }
       }
 
       // Simple fetch avec timeout
@@ -406,8 +453,8 @@ export const AuthProvider = ({ children }) => {
           body: JSON.stringify({
             productId,
             productName,
-            productImage, // ✅ AJOUT
-            action, // 'add', 'remove', ou 'toggle'
+            productImage,
+            action: actionToPerform, // Utiliser l'action déterminée
           }),
           signal: controller.signal,
           credentials: "include",
@@ -438,51 +485,36 @@ export const AuthProvider = ({ children }) => {
             errorMessage = data.message || "Erreur lors de l'opération";
         }
 
+        // Revert l'optimistic update en cas d'erreur
+        setUser({
+          ...user,
+          favorites: currentFavorites,
+        });
+
         // Monitoring pour erreurs HTTP
         const httpError = new Error(`HTTP ${res.status}: ${errorMessage}`);
         const isCritical = res.status === 401;
         console.error(httpError, "AuthContext", "toggleFavorite", isCritical);
 
         setError(errorMessage);
-        setLoading(false);
         return { success: false, error: errorMessage };
       }
 
-      // Succès
+      // Succès - La UI est déjà à jour grâce à l'optimistic update
       if (data.success) {
-        // Mettre à jour l'utilisateur avec les nouveaux favoris si retournés
-        if (data.data?.favorites) {
-          const updatedUser = {
-            ...user,
-            favorites: data.data.favorites,
-          };
-          setUser(updatedUser);
-
-          // Synchroniser avec la session
-          if (updateSession && typeof updateSession === "function") {
-            try {
-              await updateSession({
-                user: updatedUser,
-              });
-            } catch (error) {
-              console.warn("Failed to update session:", error);
-            }
-          }
-        }
-
         // Toast de succès selon l'action
-        const isAdded = data.data?.action === "added";
+        const isAdded =
+          actionToPerform === "added" || actionToPerform === "add";
         toast.success(
           isAdded
             ? `${productName} ajouté aux favoris`
             : `${productName} retiré des favoris`,
         );
 
-        setLoading(false);
         return {
           success: true,
           isFavorite: isAdded,
-          favorites: data.data?.favorites || [],
+          favorites: updatedFavorites,
         };
       }
     } catch (error) {
@@ -496,10 +528,7 @@ export const AuthProvider = ({ children }) => {
       }
 
       console.error("Toggle favorite error:", error.message);
-      setLoading(false);
       return { success: false, error: error.message };
-    } finally {
-      setLoading(false);
     }
   };
 

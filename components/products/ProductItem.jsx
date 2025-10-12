@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback, useContext, useMemo } from "react";
+import { memo, useCallback, useContext, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import Link from "next/link";
 import Image from "next/image";
@@ -12,7 +12,10 @@ import AuthContext from "@/context/AuthContext";
 
 const ProductItem = memo(({ product }) => {
   const { addItemToCart, updateCart, cart } = useContext(CartContext);
-  const { user, toggleFavorite } = useContext(AuthContext); // ✅ Ajouter toggleFavorite
+  const { user, toggleFavorite } = useContext(AuthContext);
+
+  // ✅ État de loading pour le bouton Favoris
+  const [favoriteLoading, setFavoriteLoading] = useState(false);
 
   // Vérification de sécurité pour s'assurer que product est un objet valide
   if (!product || typeof product !== "object") {
@@ -68,7 +71,7 @@ const ProductItem = memo(({ product }) => {
     [user, cart, productId, updateCart, addItemToCart],
   );
 
-  // Handler pour les favoris
+  // ✅ Handler pour les favoris avec état de loading
   const toggleFavoriteHandler = useCallback(
     async (e) => {
       e.preventDefault();
@@ -80,14 +83,22 @@ const ProductItem = memo(({ product }) => {
         );
       }
 
-      // ✅ MODIFICATION: Préparer l'image du produit
-      const productImage = product.images?.[0] || {
-        public_id: null,
-        url: null,
-      };
+      setFavoriteLoading(true);
+      try {
+        // ✅ Préparer l'image du produit
+        const productImage = product.images?.[0] || {
+          public_id: null,
+          url: null,
+        };
 
-      // Appeler la méthode du context
-      await toggleFavorite(productId, productName, productImage);
+        // Appeler la méthode du context
+        await toggleFavorite(productId, productName, productImage);
+      } catch (error) {
+        console.error("Error toggling favorite:", error);
+        toast.error("Erreur lors de la mise à jour des favoris");
+      } finally {
+        setFavoriteLoading(false);
+      }
     },
     [user, productId, productName, product.images, toggleFavorite],
   );
@@ -106,23 +117,31 @@ const ProductItem = memo(({ product }) => {
           </div>
         )}
 
-        {/* Bouton Favoris */}
+        {/* ✅ Bouton Favoris avec état de loading */}
         <button
           onClick={toggleFavoriteHandler}
+          disabled={favoriteLoading}
           className={`absolute top-3 right-3 z-10 backdrop-blur-sm p-2 rounded-full shadow-md hover:scale-110 transition-all duration-200 ${
             isFavorite ? "bg-pink-50" : "bg-white/90 hover:bg-white"
-          }`}
+          } ${favoriteLoading ? "opacity-60 cursor-not-allowed" : ""}`}
           aria-label={
             isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"
           }
+          aria-busy={favoriteLoading}
         >
-          <Heart
-            className={`w-4 h-4 transition-colors duration-200 ${
-              isFavorite
-                ? "fill-pink-500 stroke-pink-500"
-                : "stroke-gray-700 hover:stroke-pink-500"
-            }`}
-          />
+          {favoriteLoading ? (
+            // Spinner de loading
+            <div className="w-4 h-4 border-2 border-pink-600 border-t-transparent rounded-full animate-spin" />
+          ) : (
+            // Icône Cœur
+            <Heart
+              className={`w-4 h-4 transition-colors duration-200 ${
+                isFavorite
+                  ? "fill-pink-500 stroke-pink-500"
+                  : "stroke-gray-700 hover:stroke-pink-500"
+              }`}
+            />
+          )}
         </button>
 
         {/* Image du produit */}
