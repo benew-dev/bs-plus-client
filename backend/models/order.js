@@ -12,6 +12,7 @@ const orderItemSchema = new mongoose.Schema({
     required: [true, "ID du produit obligatoire"],
     ref: "Product",
     index: true,
+    default: null,
   },
   name: {
     type: String,
