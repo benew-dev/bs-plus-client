@@ -87,17 +87,24 @@ export const GET = withIntelligentRateLimit(
 
       // Compter le total de commandes avec les filtres
       const ordersCount = await Order.countDocuments({ user: user.userId });
+      console.log("Total Orders", ordersCount);
+
       const ordersPaidCount = await Order.countDocuments({
         user: user.userId,
         paymentStatus: "paid",
       });
+      console.log("Total Orders Paid", ordersPaidCount);
+
       const ordersUnpaidCount = await Order.countDocuments({
         user: user.userId,
         paymentStatus: "unpaid",
       });
+      console.log("Total Orders Unpaid", ordersUnpaidCount);
 
       // Total de toutes les commandes d'un utilisateur (tous statuts confondus)
       const totalAmountOrders = await Order.getTotalAmountByUser(user.userId);
+
+      console.log("Total Amount of all orders", totalAmountOrders);
 
       // Si aucune commande trouvée
       if (ordersCount === 0) {
@@ -137,6 +144,8 @@ export const GET = withIntelligentRateLimit(
         )
         .sort({ createdAt: -1 })
         .lean();
+
+      console.log("All data for orders", orders);
 
       // Calculer le nombre de pages
       const totalPages = Math.ceil(ordersCount / resPerPage);
