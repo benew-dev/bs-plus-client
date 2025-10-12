@@ -97,9 +97,7 @@ export const GET = withIntelligentRateLimit(
       });
 
       // Total de toutes les commandes d'un utilisateur (tous statuts confondus)
-      const totalAmountOrders = await Order.getTotalAmountByUser(
-        user.userId.toString(),
-      );
+      const totalAmountOrders = await Order.getTotalAmountByUser(user.userId);
 
       // Si aucune commande trouvée
       if (ordersCount === 0) {
