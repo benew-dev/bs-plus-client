@@ -24,8 +24,11 @@ import { getToken } from "next-auth/jwt";
 export const GET = withIntelligentRateLimit(
   async function (req) {
     try {
+      console.log("We are getting single user's orders");
       // Vérifier l'authentification
       await isAuthenticatedUser(req, NextResponse);
+
+      console.log("User is connected");
 
       // Connexion DB
       await dbConnect();
@@ -34,6 +37,8 @@ export const GET = withIntelligentRateLimit(
       const user = await User.findOne({ email: req.user.email })
         .select("_id name email phone isActive")
         .lean();
+
+      console.log("user found", user);
 
       if (!user) {
         return NextResponse.json(
@@ -81,19 +86,19 @@ export const GET = withIntelligentRateLimit(
       }
 
       // Compter le total de commandes avec les filtres
-      const ordersCount = await Order.countDocuments({ user: user._id });
+      const ordersCount = await Order.countDocuments({ user: user.userId });
       const ordersPaidCount = await Order.countDocuments({
-        user: user._id,
+        user: user.userId,
         paymentStatus: "paid",
       });
       const ordersUnpaidCount = await Order.countDocuments({
-        user: user._id,
+        user: user.userId,
         paymentStatus: "unpaid",
       });
 
       // Total de toutes les commandes d'un utilisateur (tous statuts confondus)
       const totalAmountOrders = await Order.getTotalAmountByUser(
-        user._id.toString(),
+        user.userId.toString(),
       );
 
       // Si aucune commande trouvée
@@ -123,7 +128,7 @@ export const GET = withIntelligentRateLimit(
 
       // Utiliser APIFilters pour la pagination
       const apiFilters = new APIFilters(
-        Order.find({ user: user._id }),
+        Order.find({ user: user.userId }),
         searchParams,
       ).pagination(resPerPage);
 
