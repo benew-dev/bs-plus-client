@@ -86,23 +86,26 @@ export const GET = withIntelligentRateLimit(
       }
 
       // Compter le total de commandes avec les filtres
-      const ordersCount = await Order.countDocuments({ user: user.userId });
+      // Utiliser "user.userId" avec guillemets pour accéder à la propriété imbriquée
+      const ordersCount = await Order.countDocuments({
+        "user.userId": user._id,
+      });
       console.log("Total Orders", ordersCount);
 
       const ordersPaidCount = await Order.countDocuments({
-        user: user.userId,
+        "user.userId": user._id,
         paymentStatus: "paid",
       });
       console.log("Total Orders Paid", ordersPaidCount);
 
       const ordersUnpaidCount = await Order.countDocuments({
-        user: user.userId,
+        "user.userId": user._id,
         paymentStatus: "unpaid",
       });
       console.log("Total Orders Unpaid", ordersUnpaidCount);
 
       // Total de toutes les commandes d'un utilisateur (tous statuts confondus)
-      const totalAmountOrders = await Order.getTotalAmountByUser(user.userId);
+      const totalAmountOrders = await Order.getTotalAmountByUser(user._id);
 
       console.log("Total Amount of all orders", totalAmountOrders);
 
@@ -132,15 +135,16 @@ export const GET = withIntelligentRateLimit(
       }
 
       // Utiliser APIFilters pour la pagination
+      // Utiliser "user.userId" avec guillemets pour accéder à la propriété imbriquée
       const apiFilters = new APIFilters(
-        Order.find({ user: user.userId }),
+        Order.find({ "user.userId": user._id }),
         searchParams,
       ).pagination(resPerPage);
 
       // Récupérer les commandes avec pagination - CHAMPS ADAPTÉS AU MODÈLE
       const orders = await apiFilters.query
         .select(
-          "orderNumber paymentInfo paymentStatus totalAmount createdAt updatedAt paidAt cancelledAt cancelReason orderItems",
+          "orderNumber user paymentInfo paymentStatus totalAmount createdAt updatedAt paidAt cancelledAt cancelReason orderItems",
         )
         .sort({ createdAt: -1 })
         .lean();
