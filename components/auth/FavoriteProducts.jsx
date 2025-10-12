@@ -187,7 +187,7 @@ const FavoriteProducts = () => {
                         favorite.productName,
                       );
                     }}
-                    disabled={removingIds.has(favorite.productId)} // ✅ Utiliser .has()
+                    disabled={removingIds?.has(favorite.productId)} // ✅ Utiliser .has()
                     className="p-2 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     aria-label="Retirer des favoris"
                   >
