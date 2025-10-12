@@ -47,6 +47,7 @@ const OrderItemSkeleton = () => (
  * Adapté au modèle Order sans orderStatus ni shippingInfo
  */
 const ListOrders = ({ orders }) => {
+  console.log("orders: ", orders);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [filterStatus, setFilterStatus] = useState("all");
