@@ -88,6 +88,71 @@ const paymentInfoSchema = new mongoose.Schema({
 });
 
 /**
+ * Schéma utilisateur détenu dans la commande
+ * Stocke les informations de l'utilisateur au moment de la commande
+ */
+const orderUserSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    index: true,
+    default: null,
+  },
+  name: {
+    type: String,
+    required: [true, "Nom du client obligatoire"],
+    trim: true,
+    maxlength: [100, "Le nom ne peut pas dépasser 100 caractères"],
+  },
+  email: {
+    type: String,
+    required: [true, "Email du client obligatoire"],
+    trim: true,
+    lowercase: true,
+    maxlength: [100, "L'email ne peut pas dépasser 100 caractères"],
+  },
+  phone: {
+    type: String,
+    required: [true, "Numéro de téléphone obligatoire"],
+    trim: true,
+  },
+  avatar: {
+    type: String,
+    default: null,
+    validate: {
+      validator: function (v) {
+        // Valider l'URL seulement si elle existe
+        if (!v) return true;
+        return /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/.test(
+          v,
+        );
+      },
+      message: "Format d'URL d'avatar invalide",
+    },
+  },
+  address: {
+    street: {
+      type: String,
+      default: null,
+      trim: true,
+      maxlength: [100, "L'adresse ne peut pas dépasser 100 caractères"],
+    },
+    city: {
+      type: String,
+      default: null,
+      trim: true,
+      maxlength: [50, "Le nom de la ville ne peut pas dépasser 50 caractères"],
+    },
+    country: {
+      type: String,
+      default: null,
+      trim: true,
+      maxlength: [50, "Le nom du pays ne peut pas dépasser 50 caractères"],
+    },
+  },
+});
+
+/**
  * Schéma de commande complet avec validation, indexation et relations
  */
 const orderSchema = new mongoose.Schema(
@@ -98,12 +163,7 @@ const orderSchema = new mongoose.Schema(
       index: true,
       // Généré automatiquement à la création
     },
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      required: [true, "Utilisateur obligatoire"],
-      ref: "User",
-      index: true,
-    },
+    user: orderUserSchema,
     orderItems: [orderItemSchema],
     paymentInfo: paymentInfoSchema,
     paymentStatus: {
@@ -166,7 +226,7 @@ const orderSchema = new mongoose.Schema(
 );
 
 // Indexer pour les requêtes fréquentes
-orderSchema.index({ user: 1, createdAt: -1 });
+orderSchema.index({ "user.userId": 1, createdAt: -1 });
 orderSchema.index({ paymentStatus: 1, createdAt: -1 });
 orderSchema.index({ createdAt: -1 });
 
@@ -200,7 +260,7 @@ orderSchema.pre("save", async function (next) {
     } catch (error) {
       logger.error("Erreur lors de la génération du numéro de commande", {
         error: error.message,
-        userId: this.user,
+        userId: this.user?.userId,
       });
 
       // Fallback si la génération du numéro échoue - utiliser un timestamp unique
@@ -292,7 +352,7 @@ orderSchema.methods.calculateTotal = function () {
 // Méthode statique pour trouver les commandes d'un utilisateur
 orderSchema.statics.findByUser = function (userId, limit = 10, page = 1) {
   const skip = (page - 1) * limit;
-  return this.find({ user: userId })
+  return this.find({ "user.userId": userId })
     .select("-__v")
     .sort({ createdAt: -1 })
     .skip(skip)
@@ -302,11 +362,7 @@ orderSchema.statics.findByUser = function (userId, limit = 10, page = 1) {
 
 // Méthode statique pour trouver les commandes récentes
 orderSchema.statics.findRecent = function (limit = 20) {
-  return this.find()
-    .sort({ createdAt: -1 })
-    .limit(limit)
-    .populate("user", "name email")
-    .lean();
+  return this.find().sort({ createdAt: -1 }).limit(limit).lean();
 };
 
 // Méthode statique pour les statistiques de commandes
@@ -365,7 +421,7 @@ orderSchema.statics.getTotalAmountByUser = async function (
   userId,
   onlyPaid = false,
 ) {
-  const matchStage = { user: new mongoose.Types.ObjectId(userId) };
+  const matchStage = { "user.userId": new mongoose.Types.ObjectId(userId) };
   if (onlyPaid) {
     matchStage.paymentStatus = "paid";
   }

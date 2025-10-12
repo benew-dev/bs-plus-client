@@ -44,7 +44,7 @@ export const POST = withIntelligentRateLimit(
 
       // 3. Récupérer l'utilisateur avec validation améliorée
       const user = await User.findOne({ email: req.user.email })
-        .select("_id name email isActive")
+        .select("_id name email phone avatar address isActive")
         .lean();
 
       if (!user) {
@@ -235,8 +235,19 @@ export const POST = withIntelligentRateLimit(
             delete item.cartId;
           });
 
-          // Ajouter des métadonnées à la commande
-          orderData.user = user._id;
+          // Construire l'objet utilisateur complet avec les données actuelles
+          orderData.user = {
+            userId: user._id,
+            name: user.name,
+            email: user.email,
+            phone: user.phone,
+            avatar: user.avatar?.url || null, // Extraire seulement l'URL si c'est un objet
+            address: {
+              street: user.address?.street || null,
+              city: user.address?.city || null,
+              country: user.address?.country || null,
+            },
+          };
 
           // Créer la commande
           const order = await Order.create([orderData], { session });
@@ -262,9 +273,9 @@ export const POST = withIntelligentRateLimit(
         });
 
         // Transaction réussie - Récupérer la commande complète
-        const order = await Order.findOne({ user: user._id })
+        const order = await Order.findOne({ "user.userId": user._id })
           .sort({ createdAt: -1 })
-          .select("_id orderNumber")
+          .select("_id orderNumber totalAmount")
           .lean();
 
         // Log de sécurité pour audit

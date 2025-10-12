@@ -138,16 +138,6 @@ export const GET = withIntelligentRateLimit(
       // Calculer le nombre de pages
       const totalPages = Math.ceil(ordersCount / resPerPage);
 
-      // Formater la réponse
-      const formattedOrders = orders.map((order) => ({
-        ...order,
-        user: {
-          name: user.name,
-          email: user.email,
-          phone: user.phone,
-        },
-      }));
-
       // Log pour audit (sans données sensibles)
       console.log("Order history accessed:", {
         userId: user._id,
@@ -164,7 +154,7 @@ export const GET = withIntelligentRateLimit(
         {
           success: true,
           data: {
-            orders: formattedOrders,
+            orders,
             totalPages,
             currentPage: page,
             count: ordersCount,
