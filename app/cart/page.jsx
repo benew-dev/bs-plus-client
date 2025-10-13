@@ -40,8 +40,8 @@ const CartPage = async () => {
 
     if (!sessionCookie) {
       // Rediriger vers la page de connexion avec le retour à la page du panier
-      // redirect("/login?callbackUrl=/cart");
       console.log("Session pas encore a jour");
+      redirect("/login?callbackUrl=/cart");
     }
 
     return (
@@ -64,7 +64,7 @@ const CartPage = async () => {
     });
 
     // Rediriger vers la page d'accueil en cas d'erreur
-    // redirect("/");
+    redirect("/");
   }
 };
 
