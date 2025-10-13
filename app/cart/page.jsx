@@ -33,15 +33,18 @@ export const metadata = {
 const CartPage = async () => {
   try {
     const cookie = await cookies();
+    console.log("cookie", cookie);
     // Vérification de l'authentification côté serveur
     const sessionCookie =
       cookie.get("next-auth.session-token") ||
       cookie.get("__Secure-next-auth.session-token");
 
+    console.log("Session Token", sessionCookie);
+
     if (!sessionCookie) {
       // Rediriger vers la page de connexion avec le retour à la page du panier
       console.log("Session pas encore a jour");
-      redirect("/login?callbackUrl=/cart");
+      redirect("/login");
     }
 
     return (
