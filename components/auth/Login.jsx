@@ -139,7 +139,7 @@ const Login = ({ csrfToken }) => {
         setTimeout(() => {
           const targetUrl = callBackUrl ? parseCallbackUrl(callBackUrl) : "/";
           router.push(targetUrl);
-        }, 100);
+        }, 1000);
       }
     } catch (error) {
       // Monitoring : Erreurs techniques pendant la connexion
