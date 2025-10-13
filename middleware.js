@@ -24,6 +24,7 @@ const PUBLIC_PATHS = [
   "/_next/",
   "/favicon.ico",
   "/images/",
+  "/api/auth",
 ];
 
 // Cache pour les chemins (micro-optimisation)
@@ -62,16 +63,10 @@ export async function middleware(req) {
   }
 
   try {
-    // Configuration du cookie selon l'environnement
-    const cookieName = IS_PRODUCTION
-      ? "__Secure-next-auth.session-token"
-      : "next-auth.session-token";
-
     // Une seule vérification de token
     const token = await getToken({
       req,
       secret: process.env.NEXTAUTH_SECRET,
-      cookieName,
     });
 
     if (!token) {
