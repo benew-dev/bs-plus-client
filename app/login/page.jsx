@@ -39,20 +39,21 @@ export const metadata = {
  * préalables et prépare les données nécessaires pour le client
  */
 async function LoginPage() {
-  try {
-    // Vérifier si l'utilisateur est déjà connecté
-    const headersList = await headers();
-    const user = await getAuthenticatedUser(headersList);
-    if (user) {
-      console.log("User is already logged in", {
-        user: user,
-        role: user.role,
-      });
-      // Rediriger vers la page d'accueil ou tableau de bord selon le rôle
-      console.log("User connected, redirecting to home page");
-      redirect("/"); // Ajouter cette ligne
-    }
+  // Vérifier si l'utilisateur est déjà connecté
+  const headersList = await headers();
+  const user = await getAuthenticatedUser(headersList);
 
+  if (user) {
+    console.log("User is already logged in", {
+      user: user,
+      role: user.role,
+    });
+    // Rediriger vers la page d'accueil ou tableau de bord selon le rôle
+    console.log("User connected, redirecting to home page");
+    redirect("/"); // Ajouter cette ligne
+  }
+
+  try {
     // Récupérer les en-têtes pour le logging et la sécurité
     const userAgent = headersList.get("user-agent") || "unknown";
     const referer = headersList.get("referer") || "direct";
