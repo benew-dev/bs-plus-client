@@ -31,22 +31,19 @@ export const metadata = {
 };
 
 const CartPage = async () => {
+  const cookie = await cookies();
+  // Vérification de l'authentification côté serveur
+  const sessionCookie =
+    cookie.get("next-auth.session-token") ||
+    cookie.get("__Secure-next-auth.session-token");
+
+  if (!sessionCookie) {
+    // Rediriger vers la page de connexion avec le retour à la page du panier
+    console.log("Session pas encore a jour");
+    redirect("/login");
+  }
+
   try {
-    const cookie = await cookies();
-    console.log("cookie", cookie);
-    // Vérification de l'authentification côté serveur
-    const sessionCookie =
-      cookie.get("next-auth.session-token") ||
-      cookie.get("__Secure-next-auth.session-token");
-
-    console.log("Session Token", sessionCookie);
-
-    if (!sessionCookie) {
-      // Rediriger vers la page de connexion avec le retour à la page du panier
-      console.log("Session pas encore a jour");
-      redirect("/login");
-    }
-
     return (
       <div itemScope itemType="https://schema.org/ItemList">
         <meta itemProp="name" content="Shopping Cart" />
@@ -65,9 +62,6 @@ const CartPage = async () => {
         errorType: error.name,
       },
     });
-
-    // Rediriger vers la page d'accueil en cas d'erreur
-    redirect("/");
   }
 };
 

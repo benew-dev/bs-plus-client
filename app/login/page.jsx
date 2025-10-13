@@ -50,7 +50,7 @@ async function LoginPage() {
     });
     // Rediriger vers la page d'accueil ou tableau de bord selon le rôle
     console.log("User connected, redirecting to home page");
-    redirect("/shop"); // Ajouter cette ligne
+    redirect("/"); // Ajouter cette ligne
   }
 
   try {
