@@ -69,6 +69,8 @@ export async function middleware(req) {
       secret: process.env.NEXTAUTH_SECRET,
     });
 
+    console.log("[Middleware] Token for path", path, ":", !!token);
+
     if (!token) {
       // Redirection vers login avec callback
       const loginUrl = new URL("/login", req.url);

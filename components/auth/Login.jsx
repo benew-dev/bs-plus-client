@@ -132,15 +132,14 @@ const Login = ({ csrfToken }) => {
       } else if (data?.ok) {
         toast.success("Connexion réussie!");
 
-        // Ajouter un délai de 500ms pour permettre aux cookies de se propager
+        // Rafraîchir les données du router
+        router.refresh();
+
+        // Puis naviguer après un court délai
         setTimeout(() => {
-          // Si on a une URL de callback, on y va après le délai
-          if (callBackUrl) {
-            router.push(parseCallbackUrl(callBackUrl));
-          } else {
-            router.push("/");
-          }
-        }, 500); // Délai de 500ms comme dans le contexte AuthContext
+          const targetUrl = callBackUrl ? parseCallbackUrl(callBackUrl) : "/";
+          router.push(targetUrl);
+        }, 100);
       }
     } catch (error) {
       // Monitoring : Erreurs techniques pendant la connexion
