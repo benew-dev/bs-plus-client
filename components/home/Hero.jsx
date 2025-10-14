@@ -47,14 +47,6 @@ const Hero = () => {
         <div className="flex flex-col lg:flex-row items-center gap-12">
           {/* Content */}
           <div className="flex-1 text-center lg:text-left z-10">
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm rounded-full px-4 py-2 shadow-lg mb-6">
-              <Sparkles className="w-4 h-4 text-yellow-500" />
-              <span className="text-sm font-semibold text-gray-700">
-                Nouveau : Programme de fidélité
-              </span>
-            </div>
-
             {/* Main Title */}
             <div className="mb-6">
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-800 mb-4">
