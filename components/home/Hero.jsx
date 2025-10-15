@@ -1,34 +1,27 @@
 "use client";
 
 import Link from "next/link";
-import {
-  ShoppingBag,
-  TrendingUp,
-  Shield,
-  Zap,
-  ArrowRight,
-  Sparkles,
-} from "lucide-react";
+import { ShoppingBag, TrendingUp, Shield, Zap, ArrowRight } from "lucide-react";
 
 const Hero = () => {
   const features = [
     {
-      icon: <ShoppingBag className="w-6 h-6" />,
+      icon: <ShoppingBag className="w-6 h-6" color="#ffffff" />,
       title: "50K+ Produits",
       color: "bg-blue-500",
     },
     {
-      icon: <TrendingUp className="w-6 h-6" />,
+      icon: <TrendingUp className="w-6 h-6" color="#ffffff" />,
       title: "10K+ Clients",
       color: "bg-green-500",
     },
     {
-      icon: <Shield className="w-6 h-6" />,
+      icon: <Shield className="w-6 h-6" color="#ffffff" />,
       title: "100% Sécurisé",
       color: "bg-purple-500",
     },
     {
-      icon: <Zap className="w-6 h-6" />,
+      icon: <Zap className="w-6 h-6" color="#ffffff" />,
       title: "Livraison Express",
       color: "bg-orange-500",
     },
@@ -88,7 +81,7 @@ const Hero = () => {
 
               {/* Icon */}
               <div className="text-white text-center mb-6">
-                <ShoppingBag className="w-12 h-12 mx-auto" />
+                <ShoppingBag className="w-12 h-12 mx-auto" color="#ffffff" />
               </div>
 
               {/* Stats */}
