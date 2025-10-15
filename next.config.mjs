@@ -214,6 +214,31 @@ const nextConfig = {
       },
 
       // ============================================
+      // HOMEPAGE API - Cache long (données rarement modifiées)
+      // ============================================
+      {
+        source: "/api/homepage",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=3600, stale-while-revalidate=7200",
+          },
+          {
+            key: "CDN-Cache-Control",
+            value: "max-age=7200",
+          },
+          {
+            key: "X-Content-Type-Options",
+            value: "nosniff",
+          },
+          {
+            key: "Vary",
+            value: "Accept-Encoding",
+          },
+        ],
+      },
+
+      // ============================================
       // 2. APIs PUBLIQUES (products, category)
       // Appelées par Server Components (S2S)
       // ============================================

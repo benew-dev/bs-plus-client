@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { ShoppingBag, TrendingUp, Shield, Zap, ArrowRight } from "lucide-react";
-import Image from "next/image";
+import { CldImage } from "next-cloudinary";
 
-const Hero = () => {
+const Hero = ({ homePageData }) => {
   const features = [
     {
       icon: <ShoppingBag className="w-6 h-6" />,
@@ -32,6 +32,18 @@ const Hero = () => {
     },
   ];
 
+  // Valeurs par défaut si pas de données
+  const defaultData = {
+    title: "Bienvenue sur Buy It Now",
+    subtitle: "Votre destination shopping de confiance",
+    text: "Découvrez des milliers de produits de qualité à des prix imbattables",
+    image: null,
+  };
+
+  // Utiliser les données de l'API ou les valeurs par défaut
+  const heroData = homePageData || defaultData;
+  const hasImage = heroData.image && heroData.image.publicId;
+
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-gray-50 to-blue-50">
       {/* Animated Background */}
@@ -45,18 +57,15 @@ const Hero = () => {
         <div className="flex flex-col lg:flex-row items-center gap-12">
           {/* Content */}
           <div className="flex-1 text-center lg:text-left z-10">
-            {/* Main Title */}
+            {/* Main Title - Données dynamiques */}
             <div className="mb-6">
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-800 mb-4">
-                Bienvenue sur Buy It Now
+                {heroData.title}
               </h1>
               <p className="text-xl md:text-2xl text-gray-600 font-semibold mb-2">
-                Votre destination shopping de confiance
+                {heroData.subtitle}
               </p>
-              <p className="text-lg text-gray-500">
-                Découvrez des milliers de produits de qualité à des prix
-                imbattables
-              </p>
+              <p className="text-lg text-gray-500">{heroData.text}</p>
             </div>
 
             {/* CTA Buttons */}
@@ -77,22 +86,31 @@ const Hero = () => {
             </div>
           </div>
 
-          {/* Image Hero - Tour Eiffel */}
+          {/* Image Hero - Dynamique depuis Cloudinary */}
           <div className="flex-1 relative z-10">
             <div className="relative rounded-3xl overflow-hidden shadow-2xl">
               {/* Gradient overlay pour un effet artistique */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent z-10"></div>
 
-              {/* Image */}
-              <div className="relative aspect-[3/4] lg:aspect-[4/5]">
-                <Image
-                  src="/images/eiffel-tower.jpg"
-                  alt="Tour Eiffel illuminée la nuit"
-                  fill
-                  className="object-cover"
-                  priority
-                  quality={90}
-                />
+              {/* Image dynamique ou fallback */}
+              <div className="relative w-full h-[500px] lg:h-[600px]">
+                {hasImage ? (
+                  <CldImage
+                    src={heroData.image.publicId}
+                    alt={heroData.title}
+                    fill
+                    className="object-cover"
+                    priority
+                    quality={90}
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 600px"
+                  />
+                ) : (
+                  <img
+                    src="/images/eiffel-tower.jpg"
+                    alt="Buy It Now"
+                    className="w-full h-full object-cover"
+                  />
+                )}
               </div>
 
               {/* Badge décoratif */}
@@ -118,55 +136,6 @@ const Hero = () => {
               <div className="absolute inset-0 border-2 border-white/20 rounded-3xl pointer-events-none"></div>
             </div>
           </div>
-
-          {/* Visual Element - VERSION AMÉLIORÉE (COMMENTÉE) */}
-          {/* 
-          <div className="flex-1 relative z-10">
-            <div className="relative bg-white rounded-3xl shadow-2xl p-8 border-2 border-gray-100">
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-400/20 via-purple-400/20 to-pink-400/20 rounded-3xl blur-xl -z-10"></div>
-
-              <div className="text-center mb-8">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl shadow-lg mb-4">
-                  <ShoppingBag className="w-8 h-8 text-white" />
-                </div>
-                <h3 className="text-2xl font-bold text-gray-800">
-                  Pourquoi nous choisir ?
-                </h3>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                {features.map((feature, index) => (
-                  <div
-                    key={index}
-                    className="group relative bg-gradient-to-br from-gray-50 to-white rounded-xl p-5 border border-gray-200 hover:border-gray-300 hover:shadow-lg transition-all duration-300"
-                  >
-                    <div className={`absolute inset-0 bg-gradient-to-br ${feature.color} opacity-0 group-hover:opacity-5 rounded-xl transition-opacity duration-300`}></div>
-                    
-                    <div className="relative">
-                      <div
-                        className={`w-12 h-12 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mx-auto mb-3 shadow-md group-hover:shadow-xl group-hover:scale-110 transition-all duration-300`}
-                      >
-                        <div className="text-white">
-                          {feature.icon}
-                        </div>
-                      </div>
-                      
-                      <p className="text-gray-800 font-bold text-sm text-center">
-                        {feature.title}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="absolute top-4 right-4 flex gap-1">
-                <div className="w-2 h-2 rounded-full bg-blue-400"></div>
-                <div className="w-2 h-2 rounded-full bg-purple-400"></div>
-                <div className="w-2 h-2 rounded-full bg-pink-400"></div>
-              </div>
-            </div>
-          </div>
-          */}
         </div>
       </div>
 
@@ -214,21 +183,3 @@ const Hero = () => {
 };
 
 export default Hero;
-// ```
-
-// ## 📝 Changements effectués :
-
-// 1. ✅ **Import de Next/Image** ajouté en haut
-// 2. ✅ **Ancien code commenté** : Toute la section "Visual Element - VERSION AMÉLIORÉE" est conservée mais commentée
-// 3. ✅ **Nouvelle section avec l'image de la Tour Eiffel** :
-//    - Image responsive avec `aspect-ratio`
-//    - Gradient overlay pour un effet dramatique
-//    - Badge décoratif en bas avec l'icône ShoppingBag
-//    - Bordure lumineuse pour l'effet premium
-//    - Shadow et rounded corners pour l'esthétique
-
-// ## 📁 Structure du fichier :
-
-// Pour que cela fonctionne, placez votre image ici :
-// ```
-// /public/images/eiffel-tower.jpg
