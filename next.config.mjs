@@ -114,6 +114,7 @@ const nextConfig = {
 
   // Configuration des images Cloudinary
   images: {
+    unoptimized: true, // Ajoute cette ligne
     remotePatterns: [
       {
         protocol: "https",
