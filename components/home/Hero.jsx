@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { ShoppingBag, TrendingUp, Shield, Zap, ArrowRight } from "lucide-react";
+import Image from "next/image";
 
 const Hero = () => {
   const features = [
@@ -76,13 +77,54 @@ const Hero = () => {
             </div>
           </div>
 
-          {/* Visual Element - VERSION AMÉLIORÉE */}
+          {/* Image Hero - Tour Eiffel */}
+          <div className="flex-1 relative z-10">
+            <div className="relative rounded-3xl overflow-hidden shadow-2xl">
+              {/* Gradient overlay pour un effet artistique */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent z-10"></div>
+
+              {/* Image */}
+              <div className="relative aspect-[3/4] lg:aspect-[4/5]">
+                <Image
+                  src="/images/eiffel-tower.jpg"
+                  alt="Tour Eiffel illuminée la nuit"
+                  fill
+                  className="object-cover"
+                  priority
+                  quality={90}
+                />
+              </div>
+
+              {/* Badge décoratif */}
+              <div className="absolute bottom-6 left-6 right-6 z-20">
+                <div className="bg-white/95 backdrop-blur-sm rounded-xl p-4 shadow-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center flex-shrink-0">
+                      <ShoppingBag className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-800">
+                        Expérience Premium
+                      </p>
+                      <p className="text-xs text-gray-600">
+                        Shopping de qualité supérieure
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Decorative border glow */}
+              <div className="absolute inset-0 border-2 border-white/20 rounded-3xl pointer-events-none"></div>
+            </div>
+          </div>
+
+          {/* Visual Element - VERSION AMÉLIORÉE (COMMENTÉE) */}
+          {/* 
           <div className="flex-1 relative z-10">
             <div className="relative bg-white rounded-3xl shadow-2xl p-8 border-2 border-gray-100">
-              {/* Gradient Border Effect */}
               <div className="absolute inset-0 bg-gradient-to-br from-blue-400/20 via-purple-400/20 to-pink-400/20 rounded-3xl blur-xl -z-10"></div>
 
-              {/* Header avec icône */}
               <div className="text-center mb-8">
                 <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl shadow-lg mb-4">
                   <ShoppingBag className="w-8 h-8 text-white" />
@@ -92,27 +134,23 @@ const Hero = () => {
                 </h3>
               </div>
 
-              {/* Stats Cards */}
               <div className="grid grid-cols-2 gap-4">
                 {features.map((feature, index) => (
                   <div
                     key={index}
                     className="group relative bg-gradient-to-br from-gray-50 to-white rounded-xl p-5 border border-gray-200 hover:border-gray-300 hover:shadow-lg transition-all duration-300"
                   >
-                    {/* Gradient overlay on hover */}
-                    <div
-                      className={`absolute inset-0 bg-gradient-to-br ${feature.color} opacity-0 group-hover:opacity-5 rounded-xl transition-opacity duration-300`}
-                    ></div>
-
+                    <div className={`absolute inset-0 bg-gradient-to-br ${feature.color} opacity-0 group-hover:opacity-5 rounded-xl transition-opacity duration-300`}></div>
+                    
                     <div className="relative">
-                      {/* Icon Circle */}
                       <div
                         className={`w-12 h-12 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mx-auto mb-3 shadow-md group-hover:shadow-xl group-hover:scale-110 transition-all duration-300`}
                       >
-                        <div className="text-white">{feature.icon}</div>
+                        <div className="text-white">
+                          {feature.icon}
+                        </div>
                       </div>
-
-                      {/* Title */}
+                      
                       <p className="text-gray-800 font-bold text-sm text-center">
                         {feature.title}
                       </p>
@@ -121,7 +159,6 @@ const Hero = () => {
                 ))}
               </div>
 
-              {/* Decorative dots */}
               <div className="absolute top-4 right-4 flex gap-1">
                 <div className="w-2 h-2 rounded-full bg-blue-400"></div>
                 <div className="w-2 h-2 rounded-full bg-purple-400"></div>
@@ -129,6 +166,7 @@ const Hero = () => {
               </div>
             </div>
           </div>
+          */}
         </div>
       </div>
 
@@ -176,3 +214,21 @@ const Hero = () => {
 };
 
 export default Hero;
+// ```
+
+// ## 📝 Changements effectués :
+
+// 1. ✅ **Import de Next/Image** ajouté en haut
+// 2. ✅ **Ancien code commenté** : Toute la section "Visual Element - VERSION AMÉLIORÉE" est conservée mais commentée
+// 3. ✅ **Nouvelle section avec l'image de la Tour Eiffel** :
+//    - Image responsive avec `aspect-ratio`
+//    - Gradient overlay pour un effet dramatique
+//    - Badge décoratif en bas avec l'icône ShoppingBag
+//    - Bordure lumineuse pour l'effet premium
+//    - Shadow et rounded corners pour l'esthétique
+
+// ## 📁 Structure du fichier :
+
+// Pour que cela fonctionne, placez votre image ici :
+// ```
+// /public/images/eiffel-tower.jpg
