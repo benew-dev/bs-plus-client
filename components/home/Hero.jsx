@@ -6,24 +6,28 @@ import { ShoppingBag, TrendingUp, Shield, Zap, ArrowRight } from "lucide-react";
 const Hero = () => {
   const features = [
     {
-      icon: <ShoppingBag className="w-6 h-6" color="#ffffff" />,
+      icon: <ShoppingBag className="w-6 h-6" />,
       title: "50K+ Produits",
-      color: "bg-blue-500",
+      color: "from-blue-400 to-blue-600",
+      iconBg: "bg-blue-500",
     },
     {
-      icon: <TrendingUp className="w-6 h-6" color="#ffffff" />,
+      icon: <TrendingUp className="w-6 h-6" />,
       title: "10K+ Clients",
-      color: "bg-green-500",
+      color: "from-green-400 to-green-600",
+      iconBg: "bg-green-500",
     },
     {
-      icon: <Shield className="w-6 h-6" color="#ffffff" />,
+      icon: <Shield className="w-6 h-6" />,
       title: "100% Sécurisé",
-      color: "bg-purple-500",
+      color: "from-purple-400 to-purple-600",
+      iconBg: "bg-purple-500",
     },
     {
-      icon: <Zap className="w-6 h-6" color="#ffffff" />,
+      icon: <Zap className="w-6 h-6" />,
       title: "Livraison Express",
-      color: "bg-orange-500",
+      color: "from-orange-400 to-orange-600",
+      iconBg: "bg-orange-500",
     },
   ];
 
@@ -72,39 +76,57 @@ const Hero = () => {
             </div>
           </div>
 
-          {/* Visual Element */}
+          {/* Visual Element - VERSION AMÉLIORÉE */}
           <div className="flex-1 relative z-10">
-            <div className="relative bg-gradient-to-br from-blue-600 to-purple-600 rounded-3xl shadow-2xl p-12">
-              {/* Decorative Elements */}
-              <div className="absolute -top-4 -right-4 w-24 h-24 bg-white/20 rounded-full blur-2xl"></div>
-              <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-white/20 rounded-full blur-2xl"></div>
+            <div className="relative bg-white rounded-3xl shadow-2xl p-8 border-2 border-gray-100">
+              {/* Gradient Border Effect */}
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-400/20 via-purple-400/20 to-pink-400/20 rounded-3xl blur-xl -z-10"></div>
 
-              {/* Icon */}
-              <div className="text-white text-center mb-6">
-                <ShoppingBag className="w-12 h-12 mx-auto" color="#ffffff" />
+              {/* Header avec icône */}
+              <div className="text-center mb-8">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl shadow-lg mb-4">
+                  <ShoppingBag className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-800">
+                  Pourquoi nous choisir ?
+                </h3>
               </div>
 
-              {/* Stats */}
+              {/* Stats Cards */}
               <div className="grid grid-cols-2 gap-4">
                 {features.map((feature, index) => (
                   <div
                     key={index}
-                    className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center hover:bg-white/20 transition-colors"
+                    className="group relative bg-gradient-to-br from-gray-50 to-white rounded-xl p-5 border border-gray-200 hover:border-gray-300 hover:shadow-lg transition-all duration-300"
                   >
+                    {/* Gradient overlay on hover */}
                     <div
-                      className={`${feature.color} w-12 h-12 rounded-full flex items-center justify-center text-white mx-auto mb-2 shadow-lg`}
-                    >
-                      {feature.icon}
+                      className={`absolute inset-0 bg-gradient-to-br ${feature.color} opacity-0 group-hover:opacity-5 rounded-xl transition-opacity duration-300`}
+                    ></div>
+
+                    <div className="relative">
+                      {/* Icon Circle */}
+                      <div
+                        className={`w-12 h-12 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mx-auto mb-3 shadow-md group-hover:shadow-xl group-hover:scale-110 transition-all duration-300`}
+                      >
+                        <div className="text-white">{feature.icon}</div>
+                      </div>
+
+                      {/* Title */}
+                      <p className="text-gray-800 font-bold text-sm text-center">
+                        {feature.title}
+                      </p>
                     </div>
-                    <p className="text-white font-semibold text-sm">
-                      {feature.title}
-                    </p>
                   </div>
                 ))}
               </div>
 
-              {/* Decorative Pattern */}
-              <div className="absolute inset-0 bg-white/5 rounded-3xl backdrop-blur-3xl"></div>
+              {/* Decorative dots */}
+              <div className="absolute top-4 right-4 flex gap-1">
+                <div className="w-2 h-2 rounded-full bg-blue-400"></div>
+                <div className="w-2 h-2 rounded-full bg-purple-400"></div>
+                <div className="w-2 h-2 rounded-full bg-pink-400"></div>
+              </div>
             </div>
           </div>
         </div>
@@ -125,7 +147,7 @@ const Hero = () => {
         </svg>
       </div>
 
-      {/* Add animations to globals.css */}
+      {/* Add animations */}
       <style jsx>{`
         @keyframes blob {
           0%,
