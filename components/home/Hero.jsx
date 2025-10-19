@@ -5,32 +5,32 @@ import { ShoppingBag, TrendingUp, Shield, Zap, ArrowRight } from "lucide-react";
 import { CldImage } from "next-cloudinary";
 
 const Hero = ({ homePageData }) => {
-  const features = [
-    {
-      icon: <ShoppingBag className="w-6 h-6" />,
-      title: "50K+ Produits",
-      color: "from-blue-400 to-blue-600",
-      iconBg: "bg-blue-500",
-    },
-    {
-      icon: <TrendingUp className="w-6 h-6" />,
-      title: "10K+ Clients",
-      color: "from-green-400 to-green-600",
-      iconBg: "bg-green-500",
-    },
-    {
-      icon: <Shield className="w-6 h-6" />,
-      title: "100% Sécurisé",
-      color: "from-purple-400 to-purple-600",
-      iconBg: "bg-purple-500",
-    },
-    {
-      icon: <Zap className="w-6 h-6" />,
-      title: "Livraison Express",
-      color: "from-orange-400 to-orange-600",
-      iconBg: "bg-orange-500",
-    },
-  ];
+  // const features = [
+  //   {
+  //     icon: <ShoppingBag className="w-6 h-6" />,
+  //     title: "50K+ Produits",
+  //     color: "from-blue-400 to-blue-600",
+  //     iconBg: "bg-blue-500",
+  //   },
+  //   {
+  //     icon: <TrendingUp className="w-6 h-6" />,
+  //     title: "10K+ Clients",
+  //     color: "from-green-400 to-green-600",
+  //     iconBg: "bg-green-500",
+  //   },
+  //   {
+  //     icon: <Shield className="w-6 h-6" />,
+  //     title: "100% Sécurisé",
+  //     color: "from-purple-400 to-purple-600",
+  //     iconBg: "bg-purple-500",
+  //   },
+  //   {
+  //     icon: <Zap className="w-6 h-6" />,
+  //     title: "Livraison Express",
+  //     color: "from-orange-400 to-orange-600",
+  //     iconBg: "bg-orange-500",
+  //   },
+  // ];
 
   // Valeurs par défaut si pas de données
   const defaultData = {
