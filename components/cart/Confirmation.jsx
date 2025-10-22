@@ -72,6 +72,8 @@ const Confirmation = () => {
     { name: "Confirmation", url: "" },
   ];
 
+  console.log("paymentTypes: ", paymentTypes);
+
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       <BreadCrumbs breadCrumbs={breadCrumbs} />
