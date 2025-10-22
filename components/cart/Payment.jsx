@@ -509,8 +509,6 @@ const Payment = ({ paymentTypes }) => {
                 </div>
               </div>
             </main>
-            // Modifier la section des champs de saisie pour les cacher si CASH
-            est sélectionné
             <aside className="md:w-1/3">
               <div className="bg-white shadow rounded-lg p-6 sticky top-24">
                 <h2 className="font-semibold text-lg mb-6 pb-2 border-b">
