@@ -42,13 +42,13 @@ const orderItemSchema = new mongoose.Schema({
     type: Number,
     required: [true, "Prix unitaire obligatoire"],
     min: [0, "Le prix ne peut pas être négatif"],
-    set: (val) => Math.round(val * 100) / 100, // Arrondir à 2 décimales
+    set: (val) => Math.round(val * 100) / 100,
   },
   subtotal: {
     type: Number,
     required: true,
     min: [0, "Le sous-total ne peut pas être négatif"],
-    set: (val) => Math.round(val * 100) / 100, // Arrondir à 2 décimales
+    set: (val) => Math.round(val * 100) / 100,
   },
 });
 
@@ -67,7 +67,6 @@ const paymentInfoSchema = new mongoose.Schema({
   paymentAccountNumber: {
     type: String,
     required: function () {
-      // Requis seulement si ce n'est pas un paiement cash
       return this.typePayment !== "CASH";
     },
     trim: true,
@@ -75,17 +74,14 @@ const paymentInfoSchema = new mongoose.Schema({
     default: function () {
       return this.typePayment === "CASH" ? "N/A" : undefined;
     },
-    // Masquer les numéros sensibles dans les réponses
     get: function (val) {
       if (!val || val === "N/A") return val;
-      // Afficher seulement les 4 derniers caractères, masquer le reste
       return val.length > 4 ? "••••••" + val.slice(-4) : val;
     },
   },
   paymentAccountName: {
     type: String,
     required: function () {
-      // Requis seulement si ce n'est pas un paiement cash
       return this.typePayment !== "CASH";
     },
     trim: true,
@@ -106,7 +102,11 @@ const paymentInfoSchema = new mongoose.Schema({
   },
   cashPaymentNote: {
     type: String,
-    default: "Le paiement sera effectué en espèces à la livraison",
+    default: function () {
+      return this.typePayment === "CASH"
+        ? "Le paiement sera effectué en espèces à la livraison"
+        : "";
+    },
   },
 });
 
@@ -144,7 +144,6 @@ const orderUserSchema = new mongoose.Schema({
     default: null,
     validate: {
       validator: function (v) {
-        // Valider l'URL seulement si elle existe
         if (!v) return true;
         return /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/.test(
           v,
@@ -184,7 +183,6 @@ const orderSchema = new mongoose.Schema(
       type: String,
       unique: true,
       index: true,
-      // Généré automatiquement à la création
     },
     user: orderUserSchema,
     orderItems: [orderItemSchema],
@@ -227,16 +225,14 @@ const orderSchema = new mongoose.Schema(
   {
     timestamps: {
       updatedAt: "updatedAt",
-      createdAt: false, // On utilise notre propre champ createdAt
+      createdAt: false,
     },
     toJSON: {
       virtuals: true,
       getters: true,
       transform: function (doc, ret) {
         delete ret.__v;
-        // Ne pas exposer les informations sensibles
         if (ret.paymentInfo && ret.paymentInfo.paymentAccountNumber) {
-          // Masquer le numéro de compte en ne montrant que les 4 derniers chiffres
           const num = ret.paymentInfo.paymentAccountNumber;
           ret.paymentInfo.paymentAccountNumber =
             num.length > 4 ? "••••••" + num.slice(-4) : num;
@@ -260,7 +256,6 @@ orderSchema.pre("save", async function (next) {
       const date = new Date();
       const datePart = date.toISOString().slice(0, 10).replace(/-/g, "");
 
-      // Trouver le dernier numéro de commande pour aujourd'hui
       const lastOrder = await this.constructor
         .findOne(
           {
@@ -278,7 +273,6 @@ orderSchema.pre("save", async function (next) {
         sequence = lastSequence + 1;
       }
 
-      // Formater avec padding à 5 chiffres (00001)
       this.orderNumber = `ORD-${datePart}-${sequence.toString().padStart(5, "0")}`;
     } catch (error) {
       logger.error("Erreur lors de la génération du numéro de commande", {
@@ -286,12 +280,10 @@ orderSchema.pre("save", async function (next) {
         userId: this.user?.userId,
       });
 
-      // Fallback si la génération du numéro échoue - utiliser un timestamp unique
       const timestamp = Date.now().toString();
       this.orderNumber = `ORD-${timestamp.substring(0, 8)}-${timestamp.substring(8)}`;
     }
 
-    // Calculer automatiquement le sous-total pour chaque article
     if (this.orderItems && this.orderItems.length > 0) {
       this.orderItems.forEach((item) => {
         if (!item.subtotal) {
@@ -301,14 +293,12 @@ orderSchema.pre("save", async function (next) {
     }
   }
 
-  // Mettre à jour le champ updatedAt
   this.updatedAt = Date.now();
   next();
 });
 
 // Vérifier la cohérence des données avant sauvegarde
 orderSchema.pre("save", function (next) {
-  // Vérifier que le total correspond à la somme des sous-totaux + frais
   if (this.isModified("orderItems") || this.isNew) {
     const itemsTotal = this.orderItems.reduce(
       (sum, item) => sum + (item.subtotal || item.price * item.quantity),
@@ -317,7 +307,6 @@ orderSchema.pre("save", function (next) {
     this.totalAmount = itemsTotal;
   }
 
-  // Mises à jour de dates selon le statut
   if (
     this.isModified("paymentStatus") &&
     this.paymentStatus === "paid" &&
@@ -351,7 +340,6 @@ orderSchema.post("save", async function () {
       }
     }
   } catch (error) {
-    // Ne pas bloquer la création de commande, mais logger l'erreur
     logger.error("Erreur lors de la mise à jour du stock", {
       error: error.message,
       orderId: this._id,
@@ -467,12 +455,10 @@ orderSchema.statics.getTotalAmountByUser = async function (
 
 // Protection contre les recherches trop intensives
 orderSchema.pre("find", function () {
-  // Limiter le nombre de résultats si aucune limite n'est spécifiée
   if (!this.options.limit) {
     this.limit(100);
   }
 
-  // Ajouter un timeout pour éviter les requêtes trop longues
   this.maxTimeMS(5000);
 });
 
@@ -481,7 +467,6 @@ orderSchema.virtual("itemCount").get(function () {
   return this.orderItems.reduce((total, item) => total + item.quantity, 0);
 });
 
-// Gestion optimisée du modèle avec vérification pour éviter les redéfinitions
 const Order = mongoose.models.Order || mongoose.model("Order", orderSchema);
 
 export default Order;

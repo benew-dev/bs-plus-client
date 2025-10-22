@@ -20,6 +20,7 @@ import {
   LoaderCircle,
   Package,
   Info,
+  HandCoins,
 } from "lucide-react";
 
 // Helpers

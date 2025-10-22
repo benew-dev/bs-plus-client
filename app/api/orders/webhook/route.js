@@ -10,29 +10,6 @@ import { captureException } from "@/monitoring/sentry";
 import { withIntelligentRateLimit } from "@/utils/rateLimit";
 import { getToken } from "next-auth/jwt";
 
-/**
- * POST /api/orders/webhook
- * Crée une commande après paiement confirmé
- * Rate limit: 5 commandes par 10 minutes (protection anti-abus strict)
- * Adapté pour ~500 visiteurs/jour
- *
- * Headers de sécurité gérés par next.config.mjs pour /api/orders/* :
- * - Cache-Control: private, no-cache, no-store, must-revalidate
- * - Pragma: no-cache
- * - X-Content-Type-Options: nosniff
- * - X-Robots-Tag: noindex, nofollow
- * - X-Download-Options: noopen
- *
- * Headers globaux de sécurité (toutes routes) :
- * - Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
- * - X-Frame-Options: SAMEORIGIN
- * - Referrer-Policy: strict-origin-when-cross-origin
- * - Permissions-Policy: [configuration restrictive]
- * - Content-Security-Policy: [configuration complète]
- *
- * Note: Cette route est critique pour le business et utilise des transactions
- * MongoDB pour garantir la cohérence des données (stock, panier, commande)
- */
 export const POST = withIntelligentRateLimit(
   async function (req) {
     try {
@@ -137,22 +114,13 @@ export const POST = withIntelligentRateLimit(
             { status: 400 },
           );
         }
-      }
-
-      // Pour les paiements cash, définir des valeurs par défaut
-      if (typePayment === "CASH") {
+      } else {
+        // Pour les paiements cash, définir des valeurs par défaut
         orderData.paymentInfo.paymentAccountNumber = "N/A";
         orderData.paymentInfo.paymentAccountName = "Paiement en espèces";
         orderData.paymentInfo.isCashPayment = true;
         orderData.paymentInfo.cashPaymentNote =
           "Le paiement sera effectué en espèces à la livraison";
-      }
-
-      if (!typePayment || !paymentAccountNumber || !paymentAccountName) {
-        return NextResponse.json(
-          { success: false, message: "Incomplete payment information" },
-          { status: 400 },
-        );
       }
 
       // 5. Vérifier le stock et traiter la commande en transaction
@@ -234,7 +202,7 @@ export const POST = withIntelligentRateLimit(
               {
                 $inc: {
                   stock: -item.quantity,
-                  sold: item.quantity, // Incrémenter les ventes
+                  sold: item.quantity,
                 },
               },
               { session },
@@ -277,7 +245,7 @@ export const POST = withIntelligentRateLimit(
             name: user.name,
             email: user.email,
             phone: user.phone,
-            avatar: user.avatar?.url || null, // Extraire seulement l'URL si c'est un objet
+            avatar: user.avatar?.url || null,
             address: {
               street: user.address?.street || null,
               city: user.address?.city || null,
@@ -304,7 +272,6 @@ export const POST = withIntelligentRateLimit(
             );
           }
 
-          // La transaction sera automatiquement commitée si tout réussit
           return order[0];
         });
 
@@ -329,23 +296,6 @@ export const POST = withIntelligentRateLimit(
             "unknown",
         });
 
-        // ============================================
-        // NOUVELLE IMPLÉMENTATION : Headers de sécurité
-        //
-        // Les headers sont maintenant gérés de manière centralisée
-        // par next.config.mjs pour garantir la cohérence et la sécurité
-        //
-        // Pour /api/orders/* sont appliqués automatiquement :
-        // - Cache privé uniquement (données sensibles de commande)
-        // - Pas de cache navigateur (no-store, no-cache)
-        // - Protection contre l'indexation (X-Robots-Tag)
-        // - Protection téléchargements (X-Download-Options)
-        // - Protection MIME (X-Content-Type-Options)
-        //
-        // Ces headers garantissent que les données de commande
-        // ne sont jamais mises en cache publiquement ou indexées
-        // ============================================
-
         return NextResponse.json(
           {
             success: true,
@@ -361,7 +311,6 @@ export const POST = withIntelligentRateLimit(
           try {
             const errorData = JSON.parse(transactionError.message);
 
-            // Log pour analyse
             console.warn("Order failed due to stock issues:", {
               userId: user._id,
               unavailableProducts: errorData.products,
@@ -382,14 +331,12 @@ export const POST = withIntelligentRateLimit(
           }
         }
 
-        // Log de l'erreur de transaction
         console.error("Transaction failed:", {
           userId: user._id,
           error: transactionError.message,
           timestamp: new Date().toISOString(),
         });
 
-        // Autre erreur de transaction
         throw transactionError;
       } finally {
         await session.endSession();
@@ -397,7 +344,6 @@ export const POST = withIntelligentRateLimit(
     } catch (error) {
       console.error("Order webhook error:", error.message);
 
-      // Capturer seulement les vraies erreurs système
       if (
         !error.message?.includes("authentication") &&
         !error.message?.includes("STOCK_ERROR") &&
@@ -408,13 +354,12 @@ export const POST = withIntelligentRateLimit(
             component: "api",
             route: "orders/webhook/POST",
             user: req.user?.email,
-            critical: true, // Erreur critique car c'est une commande
+            critical: true,
           },
           level: "error",
         });
       }
 
-      // Gestion détaillée des erreurs
       let status = 500;
       let message = "Failed to process order. Please try again.";
       let code = "INTERNAL_ERROR";
@@ -453,7 +398,7 @@ export const POST = withIntelligentRateLimit(
   },
   {
     category: "payment",
-    action: "createOrder", // 5 commandes par 5 minutes
+    action: "createOrder",
     extractUserInfo: async (req) => {
       try {
         const cookieName =
