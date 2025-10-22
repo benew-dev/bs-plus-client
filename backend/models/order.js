@@ -60,31 +60,53 @@ const paymentInfoSchema = new mongoose.Schema({
     type: String,
     required: [true, "Type de paiement obligatoire"],
     enum: {
-      values: ["WAAFI", "D-MONEY", "CAC-PAY", "BCI-PAY"],
+      values: ["WAAFI", "D-MONEY", "CAC-PAY", "BCI-PAY", "CASH"],
       message: "Type de paiement non supporté: {VALUE}",
     },
   },
   paymentAccountNumber: {
     type: String,
-    required: [true, "Numéro de compte obligatoire"],
+    required: function () {
+      // Requis seulement si ce n'est pas un paiement cash
+      return this.typePayment !== "CASH";
+    },
     trim: true,
     maxlength: [50, "Le numéro ne peut pas dépasser 50 caractères"],
+    default: function () {
+      return this.typePayment === "CASH" ? "N/A" : undefined;
+    },
     // Masquer les numéros sensibles dans les réponses
     get: function (val) {
-      if (!val) return val;
+      if (!val || val === "N/A") return val;
       // Afficher seulement les 4 derniers caractères, masquer le reste
       return val.length > 4 ? "••••••" + val.slice(-4) : val;
     },
   },
   paymentAccountName: {
     type: String,
-    required: [true, "Nom du compte obligatoire"],
+    required: function () {
+      // Requis seulement si ce n'est pas un paiement cash
+      return this.typePayment !== "CASH";
+    },
     trim: true,
     maxlength: [100, "Le nom ne peut pas dépasser 100 caractères"],
+    default: function () {
+      return this.typePayment === "CASH" ? "Paiement en espèces" : undefined;
+    },
   },
   paymentDate: {
     type: Date,
     default: Date.now,
+  },
+  isCashPayment: {
+    type: Boolean,
+    default: function () {
+      return this.typePayment === "CASH";
+    },
+  },
+  cashPaymentNote: {
+    type: String,
+    default: "Le paiement sera effectué en espèces à la livraison",
   },
 });
 

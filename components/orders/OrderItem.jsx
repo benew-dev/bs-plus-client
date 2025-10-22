@@ -2,7 +2,7 @@
 
 import { memo, useState, useCallback } from "react";
 import dynamic from "next/dynamic";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, HandCoins } from "lucide-react";
 
 // Chargement dynamique des composants
 const OrderedProduct = dynamic(() => import("./OrderedProduct"), {
@@ -14,7 +14,7 @@ const OrderedProduct = dynamic(() => import("./OrderedProduct"), {
 
 /**
  * Composant d'affichage d'une commande individuelle
- * Adapté au modèle Order sans orderStatus, shippingInfo, taxAmount, shippingAmount
+ * Adapté au modèle Order avec support du paiement CASH
  */
 const OrderItem = memo(({ order }) => {
   const [expanded, setExpanded] = useState(false);
@@ -62,6 +62,11 @@ const OrderItem = memo(({ order }) => {
   const paymentStatus = order.paymentStatus || "unpaid";
   const isCancelled = !!order.cancelledAt;
 
+  // Vérifier si c'est un paiement cash
+  const isCashPayment =
+    order.paymentInfo?.typePayment === "CASH" ||
+    order.paymentInfo?.isCashPayment === true;
+
   // Utilisation du totalAmount du modèle
   const totalAmount = order.totalAmount || 0;
 
@@ -90,6 +95,24 @@ const OrderItem = memo(({ order }) => {
     }
   };
 
+  // Traduction des statuts de paiement
+  const getPaymentStatusLabel = (status) => {
+    switch (status) {
+      case "paid":
+        return "PAYÉE";
+      case "unpaid":
+        return "NON PAYÉE";
+      case "processing":
+        return "EN TRAITEMENT";
+      case "refunded":
+        return "REMBOURSÉE";
+      case "failed":
+        return "ÉCHOUÉE";
+      default:
+        return status.toUpperCase();
+    }
+  };
+
   return (
     <article className="p-3 lg:p-5 mb-5 bg-white border border-gray-200 rounded-md shadow-sm hover:shadow-md transition-shadow">
       <header className="lg:flex justify-between mb-4">
@@ -106,7 +129,7 @@ const OrderItem = memo(({ order }) => {
                 expanded ? "Réduire les détails" : "Voir plus de détails"
               }
             >
-              {expanded ? <ChevronUp /> : <ChevronDown />}
+              {expanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
             </button>
           </div>
 
@@ -114,8 +137,15 @@ const OrderItem = memo(({ order }) => {
             <span
               className={`px-2 py-1 rounded-full text-xs font-semibold ${getPaymentStatusStyle(paymentStatus)}`}
             >
-              {paymentStatus.toUpperCase()}
+              {getPaymentStatusLabel(paymentStatus)}
             </span>
+
+            {isCashPayment && (
+              <span className="px-2 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700 flex items-center gap-1">
+                <HandCoins size={12} />
+                ESPÈCES
+              </span>
+            )}
 
             {isCancelled && (
               <span className="px-2 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">
@@ -143,6 +173,7 @@ const OrderItem = memo(({ order }) => {
       </header>
 
       <div className="grid md:grid-cols-3 gap-4">
+        {/* Section Client */}
         <div>
           <p className="text-gray-600 mb-1 font-medium text-sm">Client</p>
           <ul className="text-gray-700 text-sm space-y-1">
@@ -156,6 +187,7 @@ const OrderItem = memo(({ order }) => {
           </ul>
         </div>
 
+        {/* Section Résumé financier */}
         <div>
           <p className="text-gray-600 mb-1 font-medium text-sm">
             Résumé financier
@@ -173,44 +205,94 @@ const OrderItem = memo(({ order }) => {
           </ul>
         </div>
 
+        {/* Section Information de paiement */}
         <div>
           <p className="text-gray-600 mb-1 font-medium text-sm">
             Information de paiement
           </p>
-          <ul className="text-gray-700 text-sm space-y-1">
-            <li>
-              <span className="text-gray-600">Mode:</span>{" "}
-              <span className="font-medium">
-                {order.paymentInfo?.typePayment || "-"}
-              </span>
-            </li>
-            <li>
-              <span className="text-gray-600">Nom:</span>{" "}
-              <span className="font-medium">
-                {order.paymentInfo?.paymentAccountName || "-"}
-              </span>
-            </li>
-            <li>
-              <span className="text-gray-600">Numéro:</span>{" "}
-              <span className="font-mono text-xs">
-                {order.paymentInfo?.paymentAccountNumber || "••••••••"}
-              </span>
-            </li>
-            {order.paymentInfo?.paymentDate && (
+
+          {isCashPayment ? (
+            // Affichage spécial pour paiement cash
+            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 mt-2">
+              <div className="flex items-start gap-2">
+                <HandCoins
+                  className="text-emerald-600 flex-shrink-0 mt-0.5"
+                  size={18}
+                />
+                <div>
+                  <p className="font-semibold text-emerald-900 text-sm">
+                    Paiement en espèces
+                  </p>
+                  <p className="text-xs text-emerald-700 mt-1">
+                    À la livraison
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            // Affichage normal pour autres paiements
+            <ul className="text-gray-700 text-sm space-y-1">
               <li>
-                <span className="text-gray-600">Date paiement:</span>{" "}
-                <span className="text-xs">
-                  {formatDate(order.paymentInfo.paymentDate, "short")}
+                <span className="text-gray-600">Mode:</span>{" "}
+                <span className="font-medium">
+                  {order.paymentInfo?.typePayment || "-"}
                 </span>
               </li>
-            )}
-          </ul>
+              <li>
+                <span className="text-gray-600">Nom:</span>{" "}
+                <span className="font-medium">
+                  {order.paymentInfo?.paymentAccountName || "-"}
+                </span>
+              </li>
+              <li>
+                <span className="text-gray-600">Numéro:</span>{" "}
+                <span className="font-mono text-xs">
+                  {order.paymentInfo?.paymentAccountNumber || "••••••••"}
+                </span>
+              </li>
+              {order.paymentInfo?.paymentDate && (
+                <li>
+                  <span className="text-gray-600">Date paiement:</span>{" "}
+                  <span className="text-xs">
+                    {formatDate(order.paymentInfo.paymentDate, "short")}
+                  </span>
+                </li>
+              )}
+            </ul>
+          )}
         </div>
       </div>
 
       {expanded && (
         <>
           <hr className="my-4" />
+
+          {/* Note pour paiement cash dans la section expanded */}
+          {isCashPayment && (
+            <div className="mb-4 p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
+              <div className="flex items-start gap-3">
+                <div className="p-2 bg-emerald-100 rounded-full">
+                  <HandCoins className="text-emerald-600" size={20} />
+                </div>
+                <div className="flex-1">
+                  <p className="font-semibold text-emerald-900 mb-1">
+                    Paiement en espèces à la livraison
+                  </p>
+                  <p className="text-sm text-emerald-700">
+                    Le montant de{" "}
+                    <span className="font-bold">${totalAmount.toFixed(2)}</span>{" "}
+                    sera à régler en espèces au moment de la réception de votre
+                    commande.
+                  </p>
+                  {order.paymentInfo?.cashPaymentNote && (
+                    <p className="text-xs text-emerald-600 mt-2 italic">
+                      {order.paymentInfo.cashPaymentNote}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Timeline des dates importantes */}
           {(order.paidAt || order.cancelledAt || order.updatedAt) && (
@@ -267,6 +349,7 @@ const OrderItem = memo(({ order }) => {
             </div>
           )}
 
+          {/* Articles commandés */}
           <div>
             <p className="text-gray-600 mb-3 font-medium">Articles commandés</p>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -295,9 +378,17 @@ const OrderItem = memo(({ order }) => {
       <div className="text-center mt-4">
         <button
           onClick={toggleExpanded}
-          className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors"
+          className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors inline-flex items-center gap-1"
         >
-          {expanded ? "Masquer les détails" : "Afficher les détails"}
+          {expanded ? (
+            <>
+              Masquer les détails <ChevronUp size={16} />
+            </>
+          ) : (
+            <>
+              Afficher les détails <ChevronDown size={16} />
+            </>
+          )}
         </button>
       </div>
     </article>

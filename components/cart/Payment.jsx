@@ -30,6 +30,41 @@ const BreadCrumbs = dynamic(() => import("@/components/layouts/BreadCrumbs"), {
   ssr: true,
 });
 
+// Ajouter cette constante après les imports
+const PLATFORM_CONFIG = {
+  WAAFI: {
+    color: "bg-purple-100 text-purple-700 border-purple-200",
+    icon: Smartphone,
+    displayName: "Waafi",
+    requiresAccount: true,
+  },
+  "D-MONEY": {
+    color: "bg-blue-100 text-blue-700 border-blue-200",
+    icon: Smartphone,
+    displayName: "D-Money",
+    requiresAccount: true,
+  },
+  "CAC-PAY": {
+    color: "bg-green-100 text-green-700 border-green-200",
+    icon: Building2,
+    displayName: "CAC Pay",
+    requiresAccount: true,
+  },
+  "BCI-PAY": {
+    color: "bg-orange-100 text-orange-700 border-orange-200",
+    icon: Building2,
+    displayName: "BCI Pay",
+    requiresAccount: true,
+  },
+  CASH: {
+    color: "bg-emerald-100 text-emerald-700 border-emerald-200",
+    icon: HandCoins,
+    displayName: "Espèces",
+    requiresAccount: false,
+    description: "Paiement en espèces à la livraison",
+  },
+};
+
 // Squelette pour chargement des items
 const CartItemSkeleton = memo(() => (
   <div className="animate-pulse">
@@ -282,6 +317,7 @@ const Payment = ({ paymentTypes }) => {
     return { isValid: true, data: { accountName, accountNumber: cleanNumber } };
   };
 
+  // Modifier la fonction handlePayment
   const handlePayment = useCallback(async () => {
     submitAttempts.current += 1;
     if (submitAttempts.current > 1) {
@@ -296,6 +332,47 @@ const Payment = ({ paymentTypes }) => {
     try {
       setIsSubmitting(true);
 
+      // Vérifier qu'une méthode de paiement est sélectionnée
+      if (!selectedPayment) {
+        toast.error("Veuillez sélectionner une méthode de paiement", {
+          position: "bottom-right",
+        });
+        setIsSubmitting(false);
+        submitAttempts.current = 0;
+        return;
+      }
+
+      // Si c'est un paiement cash, pas besoin de valider les infos de compte
+      if (selectedPayment.platform === "CASH") {
+        const paymentInfo = {
+          typePayment: "CASH",
+          paymentAccountNumber: "N/A",
+          paymentAccountName: "Paiement en espèces",
+          paymentDate: new Date().toISOString(),
+          isCashPayment: true,
+          cashPaymentNote:
+            "Le paiement sera effectué en espèces à la livraison",
+        };
+
+        const finalOrderInfo = {
+          ...orderInfo,
+          paymentInfo,
+          totalAmount: totalAmount,
+        };
+
+        setOrderInfo(finalOrderInfo);
+        router.push("/review-order");
+
+        setSelectedPayment(null);
+        setAccountName("");
+        setAccountNumber("");
+
+        setIsSubmitting(false);
+        submitAttempts.current = 0;
+        return;
+      }
+
+      // Pour les autres méthodes de paiement, valider normalement
       const validationResult = await validatePaymentData();
       if (!validationResult.isValid) {
         const errorMessages = Object.values(validationResult.errors || {});
@@ -307,12 +384,13 @@ const Payment = ({ paymentTypes }) => {
         return;
       }
 
-      // Création des informations de paiement avec le nouveau modèle
+      // Création des informations de paiement
       const paymentInfo = {
         typePayment: selectedPayment.platform,
         paymentAccountNumber: accountNumber,
         paymentAccountName: accountName,
         paymentDate: new Date().toISOString(),
+        isCashPayment: false,
       };
 
       const finalOrderInfo = {
@@ -424,71 +502,98 @@ const Payment = ({ paymentTypes }) => {
                 </div>
               </div>
             </main>
-
+            // Modifier la section des champs de saisie pour les cacher si CASH
+            est sélectionné
             <aside className="md:w-1/3">
               <div className="bg-white shadow rounded-lg p-6 sticky top-24">
                 <h2 className="font-semibold text-lg mb-6 pb-2 border-b">
                   Finaliser votre paiement
                 </h2>
 
-                <div className="space-y-4 mb-6">
-                  <div className="form-group">
-                    <label className="block text-gray-700 mb-1 font-medium text-sm">
-                      Nom sur le compte <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      className={`w-full px-3 py-2 border rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition-colors ${
-                        errors.accountName
-                          ? "border-red-300 bg-red-50"
-                          : "border-gray-300 bg-gray-50 hover:border-gray-400"
-                      }`}
-                      type="text"
-                      placeholder="Nom complet sur le compte"
-                      value={accountName}
-                      onChange={handleAccountNameChange}
-                      aria-invalid={errors.accountName ? "true" : "false"}
-                      required
-                    />
-                    {errors.accountName && (
-                      <p className="mt-1 text-red-500 text-xs">
-                        {errors.accountName}
-                      </p>
-                    )}
-                  </div>
+                {/* Afficher les champs seulement si ce n'est pas un paiement cash */}
+                {selectedPayment?.platform !== "CASH" && (
+                  <div className="space-y-4 mb-6">
+                    <div className="form-group">
+                      <label className="block text-gray-700 mb-1 font-medium text-sm">
+                        Nom sur le compte{" "}
+                        <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        className={`w-full px-3 py-2 border rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition-colors ${
+                          errors.accountName
+                            ? "border-red-300 bg-red-50"
+                            : "border-gray-300 bg-gray-50 hover:border-gray-400"
+                        }`}
+                        type="text"
+                        placeholder="Nom complet sur le compte"
+                        value={accountName}
+                        onChange={handleAccountNameChange}
+                        aria-invalid={errors.accountName ? "true" : "false"}
+                        required
+                      />
+                      {errors.accountName && (
+                        <p className="mt-1 text-red-500 text-xs">
+                          {errors.accountName}
+                        </p>
+                      )}
+                    </div>
 
-                  <div className="form-group">
-                    <label className="block text-gray-700 mb-1 font-medium text-sm">
-                      Numéro de compte <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      className={`w-full px-3 py-2 border rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition-colors ${
-                        errors.accountNumber
-                          ? "border-red-300 bg-red-50"
-                          : "border-gray-300 bg-gray-50 hover:border-gray-400"
-                      }`}
-                      type="text"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      placeholder="Numéro de compte (chiffres uniquement)"
-                      value={accountNumber}
-                      onChange={handleAccountNumberChange}
-                      aria-invalid={errors.accountNumber ? "true" : "false"}
-                      autoComplete="off"
-                      maxLength="30"
-                      required
-                    />
-                    {errors.accountNumber && (
-                      <p className="mt-1 text-red-500 text-xs">
-                        {errors.accountNumber}
-                      </p>
-                    )}
-                    <div className="mt-1 text-xs text-gray-500">
-                      <p>
-                        Saisissez uniquement les chiffres, minimum 4 caractères
-                      </p>
+                    <div className="form-group">
+                      <label className="block text-gray-700 mb-1 font-medium text-sm">
+                        Numéro de compte <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        className={`w-full px-3 py-2 border rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition-colors ${
+                          errors.accountNumber
+                            ? "border-red-300 bg-red-50"
+                            : "border-gray-300 bg-gray-50 hover:border-gray-400"
+                        }`}
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        placeholder="Numéro de compte (chiffres uniquement)"
+                        value={accountNumber}
+                        onChange={handleAccountNumberChange}
+                        aria-invalid={errors.accountNumber ? "true" : "false"}
+                        autoComplete="off"
+                        maxLength="30"
+                        required
+                      />
+                      {errors.accountNumber && (
+                        <p className="mt-1 text-red-500 text-xs">
+                          {errors.accountNumber}
+                        </p>
+                      )}
+                      <div className="mt-1 text-xs text-gray-500">
+                        <p>
+                          Saisissez uniquement les chiffres, minimum 4
+                          caractères
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
+
+                {/* Message pour paiement cash */}
+                {selectedPayment?.platform === "CASH" && (
+                  <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
+                    <div className="flex items-start gap-3">
+                      <HandCoins
+                        className="text-emerald-600 flex-shrink-0 mt-0.5"
+                        size={20}
+                      />
+                      <div>
+                        <p className="font-semibold text-emerald-900 mb-1">
+                          Paiement en espèces
+                        </p>
+                        <p className="text-sm text-emerald-700">
+                          Vous paierez en espèces au moment de la livraison de
+                          votre commande.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 <div className="space-y-3 mb-6">
                   <div className="flex justify-between text-lg font-bold border-t pt-3 mt-2">
@@ -575,16 +680,17 @@ const NoPaymentMethodsFound = memo(() => (
 ));
 NoPaymentMethodsFound.displayName = "NoPaymentMethodsFound";
 
+// Modifier le composant PaymentMethodCard pour gérer CASH
 const PaymentMethodCard = memo(({ payment, isSelected, onSelect }) => {
-  const platformColors = {
-    WAAFI: "from-blue-500 to-blue-600",
-    "D-MONEY": "from-purple-500 to-purple-600",
-    "CAC-PAY": "from-green-500 to-green-600",
-    "BCI-PAY": "from-orange-500 to-orange-600",
+  const config = PLATFORM_CONFIG[payment?.platform] || {
+    color: "bg-gray-100 text-gray-700 border-gray-200",
+    icon: CreditCard,
+    displayName: payment?.platform || "Inconnu",
+    requiresAccount: true,
   };
 
-  const colorScheme =
-    platformColors[payment?.platform] || "from-emerald-500 to-green-600";
+  const IconComponent = config.icon;
+  const isCash = payment?.platform === "CASH";
 
   return (
     <label
@@ -605,23 +711,36 @@ const PaymentMethodCard = memo(({ payment, isSelected, onSelect }) => {
         />
         <div className="ml-3">
           <span
-            className={`inline-block px-3 py-1 rounded-full text-white text-sm font-bold bg-gradient-to-r ${colorScheme}`}
+            className={`inline-block px-3 py-1 rounded-full text-white text-sm font-bold bg-gradient-to-r ${config.color}`}
           >
-            {payment?.platform}
+            {config.displayName}
           </span>
         </div>
       </span>
-      <div className="ml-7 space-y-1">
-        <div className="text-sm text-gray-600">
-          <span className="font-medium">Titulaire:</span> {payment?.name}
+
+      {isCash ? (
+        <div className="ml-7 space-y-1">
+          <div className="text-sm text-gray-700 font-medium">
+            {config.description}
+          </div>
+          <div className="text-xs text-gray-500">
+            Paiement sécurisé à la réception de votre commande
+          </div>
         </div>
-        <div className="text-sm text-gray-600">
-          <span className="font-medium">Numéro:</span> {payment?.number}
+      ) : (
+        <div className="ml-7 space-y-1">
+          <div className="text-sm text-gray-600">
+            <span className="font-medium">Titulaire:</span> {payment?.name}
+          </div>
+          <div className="text-sm text-gray-600">
+            <span className="font-medium">Numéro:</span> {payment?.number}
+          </div>
         </div>
-      </div>
+      )}
     </label>
   );
 });
+
 PaymentMethodCard.displayName = "PaymentMethodCard";
 
 export default Payment;
