@@ -27,7 +27,6 @@ import {
   LoaderCircle,
   ShoppingCart,
   Smartphone,
-  HandCoins,
   Building2,
 } from "lucide-react";
 import ItemShipping from "./components/ItemShipping";
