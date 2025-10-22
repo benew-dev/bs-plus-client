@@ -29,7 +29,7 @@ const PLATFORM_CONFIG = {
     displayName: "D-Money",
   },
   "CAC-PAY": {
-    color: "bg-green-100 text-green-700 border-green-200",
+    color: "bg-green-500 text-green-700 border-green-300",
     icon: Building2,
     displayName: "CAC Pay",
   },

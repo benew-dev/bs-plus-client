@@ -22,12 +22,12 @@ import { isArrayEmpty, formatPrice, safeValue } from "@/helpers/helpers";
 import PaymentPageSkeleton from "../skeletons/PaymentPageSkeleton";
 import { validateDjiboutiPayment } from "@/helpers/validation";
 import {
+  CreditCard,
   HandCoins,
   Info,
   LoaderCircle,
   ShoppingCart,
   Smartphone,
-  Building2,
 } from "lucide-react";
 import ItemShipping from "./components/ItemShipping";
 
@@ -52,14 +52,14 @@ const PLATFORM_CONFIG = {
     requiresAccount: true,
   },
   "CAC-PAY": {
-    color: "bg-green-100 text-green-700 border-green-200",
-    icon: Building2,
+    color: "bg-green-500 text-green-700 border-green-300",
+    icon: Smartphone,
     displayName: "CAC Pay",
     requiresAccount: true,
   },
   "BCI-PAY": {
     color: "bg-orange-100 text-orange-700 border-orange-200",
-    icon: Building2,
+    icon: Smartphone,
     displayName: "BCI Pay",
     requiresAccount: true,
   },
@@ -106,7 +106,7 @@ const Payment = ({ paymentTypes }) => {
   // Contextes
   const { cart, cartTotal, cartCount } = useContext(CartContext);
 
-  const { orderInfo, setOrderInfo, error, clearErrors } =
+  const { orderInfo, setOrderInfo, setPaymentTypes, error, clearErrors } =
     useContext(OrderContext);
 
   const router = useRouter();
@@ -366,6 +366,8 @@ const Payment = ({ paymentTypes }) => {
           paymentInfo,
           totalAmount: totalAmount,
         };
+
+        setPaymentTypes(paymentTypes);
 
         setOrderInfo(finalOrderInfo);
         router.push("/review-order");
@@ -694,7 +696,6 @@ const PaymentMethodCard = memo(({ payment, isSelected, onSelect }) => {
     requiresAccount: true,
   };
 
-  const IconComponent = config.icon;
   const isCash = payment?.platform === "CASH";
 
   return (
