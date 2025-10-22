@@ -379,8 +379,6 @@ const Payment = ({ paymentTypes }) => {
         return;
       }
 
-      Smartphone;
-
       // Pour les autres méthodes de paiement, valider normalement
       const validationResult = await validatePaymentData();
       if (!validationResult.isValid) {
