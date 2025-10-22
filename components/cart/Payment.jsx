@@ -21,7 +21,15 @@ import OrderContext from "@/context/OrderContext";
 import { isArrayEmpty, formatPrice, safeValue } from "@/helpers/helpers";
 import PaymentPageSkeleton from "../skeletons/PaymentPageSkeleton";
 import { validateDjiboutiPayment } from "@/helpers/validation";
-import { HandCoins, Info, LoaderCircle, ShoppingCart } from "lucide-react";
+import {
+  HandCoins,
+  Info,
+  LoaderCircle,
+  ShoppingCart,
+  Smartphone,
+  HandCoins,
+  Building2,
+} from "lucide-react";
 import ItemShipping from "./components/ItemShipping";
 
 // Chargement dynamique des composants
@@ -371,6 +379,8 @@ const Payment = ({ paymentTypes }) => {
         submitAttempts.current = 0;
         return;
       }
+
+      Smartphone;
 
       // Pour les autres méthodes de paiement, valider normalement
       const validationResult = await validatePaymentData();
