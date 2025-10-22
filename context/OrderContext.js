@@ -182,7 +182,7 @@ export const OrderProvider = ({ children }) => {
         lowStockProducts,
         paymentTypes,
         orderInfo,
-        setPaymentTypes: safeSetPaymentTypes,
+        setPaymentTypes,
         setOrderInfo,
         addOrder,
         setUpdated,
