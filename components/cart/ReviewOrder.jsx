@@ -138,6 +138,10 @@ const ReviewOrder = () => {
     return null;
   }
 
+  // Extraire les informations de paiement avec le nouveau modèle
+  const { typePayment, paymentAccountName, paymentAccountNumber } =
+    orderInfo.paymentInfo;
+
   return (
     <div className="min-h-screen bg-gray-50">
       <BreadCrumbs breadCrumbs={breadCrumbs} />
@@ -229,23 +233,21 @@ const ReviewOrder = () => {
 
                 <div className="space-y-3">
                   <div className="flex justify-between py-2">
-                    <span className="text-gray-600">Moyen de paiement:</span>
-                    <span className="font-medium text-gray-800">
-                      {orderInfo.paymentInfo.typePayment}
+                    <span className="text-gray-600">Plateforme:</span>
+                    <span className="font-medium text-gray-800 px-3 py-1 bg-blue-100 rounded-full text-sm">
+                      {typePayment}
                     </span>
                   </div>
                   <div className="flex justify-between py-2">
                     <span className="text-gray-600">Nom du compte:</span>
                     <span className="font-medium text-gray-800">
-                      {orderInfo.paymentInfo.paymentAccountName}
+                      {paymentAccountName}
                     </span>
                   </div>
                   <div className="flex justify-between py-2">
                     <span className="text-gray-600">Numéro de compte:</span>
                     <span className="font-medium text-gray-800">
-                      {orderInfo.paymentInfo.paymentAccountNumber.slice(0, 2)}
-                      ••••••
-                      {orderInfo.paymentInfo.paymentAccountNumber.slice(-4)}
+                      {paymentAccountNumber}
                     </span>
                   </div>
                 </div>
