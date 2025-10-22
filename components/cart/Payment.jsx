@@ -367,8 +367,6 @@ const Payment = ({ paymentTypes }) => {
           totalAmount: totalAmount,
         };
 
-        setPaymentTypes(paymentTypes);
-
         setOrderInfo(finalOrderInfo);
         router.push("/review-order");
 
@@ -408,6 +406,8 @@ const Payment = ({ paymentTypes }) => {
         totalAmount: totalAmount,
       };
 
+      setPaymentTypes(paymentTypes);
+
       setOrderInfo(finalOrderInfo);
       router.push("/review-order");
 
@@ -443,6 +443,8 @@ const Payment = ({ paymentTypes }) => {
     totalAmount,
     orderInfo,
     setOrderInfo,
+    setPaymentTypes,
+    paymentTypes,
     router,
   ]);
 
