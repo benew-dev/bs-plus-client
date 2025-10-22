@@ -13,6 +13,10 @@ import { getToken } from "next-auth/jwt";
  * Récupère l'historique des commandes de l'utilisateur connecté
  * Rate limit: Configuration intelligente - authenticatedRead (200 req/min)
  *
+ * Support des paiements:
+ * - Paiements électroniques (WAAFI, D-MONEY, CAC-PAY, BCI-PAY)
+ * - Paiement en espèces (CASH) à la livraison
+ *
  * Headers de sécurité gérés par next.config.mjs pour /api/orders/* :
  * - Cache-Control: private, no-cache, no-store, must-revalidate
  * - Pragma: no-cache
@@ -83,7 +87,6 @@ export const GET = withIntelligentRateLimit(
       }
 
       // Compter le total de commandes avec les filtres
-      // Utiliser "user.userId" avec guillemets pour accéder à la propriété imbriquée
       const ordersCount = await Order.countDocuments({
         "user.userId": user._id,
       });
@@ -96,6 +99,12 @@ export const GET = withIntelligentRateLimit(
       const ordersUnpaidCount = await Order.countDocuments({
         "user.userId": user._id,
         paymentStatus: "unpaid",
+      });
+
+      // Compter les commandes en espèces (CASH)
+      const ordersCashCount = await Order.countDocuments({
+        "user.userId": user._id,
+        "paymentInfo.typePayment": "CASH",
       });
 
       // Total de toutes les commandes d'un utilisateur (tous statuts confondus)
@@ -115,6 +124,7 @@ export const GET = withIntelligentRateLimit(
               perPage: resPerPage,
               paidCount: 0,
               unpaidCount: 0,
+              cashCount: 0,
               totalAmountOrders: { totalAmount: 0, orderCount: 0 },
               meta: {
                 hasOrders: false,
@@ -127,13 +137,12 @@ export const GET = withIntelligentRateLimit(
       }
 
       // Utiliser APIFilters pour la pagination
-      // Utiliser "user.userId" avec guillemets pour accéder à la propriété imbriquée
       const apiFilters = new APIFilters(
         Order.find({ "user.userId": user._id }),
         searchParams,
       ).pagination(resPerPage);
 
-      // Récupérer les commandes avec pagination - CHAMPS ADAPTÉS AU MODÈLE
+      // Récupérer les commandes avec pagination
       const orders = await apiFilters.query
         .select(
           "orderNumber user paymentInfo paymentStatus totalAmount createdAt updatedAt paidAt cancelledAt cancelReason orderItems",
@@ -149,6 +158,7 @@ export const GET = withIntelligentRateLimit(
         userId: user._id,
         userEmail: user.email,
         ordersRetrieved: orders.length,
+        cashOrders: ordersCashCount,
         page,
         timestamp: new Date().toISOString(),
         ip:
@@ -166,8 +176,12 @@ export const GET = withIntelligentRateLimit(
             count: ordersCount,
             paidCount: ordersPaidCount,
             unpaidCount: ordersUnpaidCount,
+            cashCount: ordersCashCount, // Nouveau: compteur commandes CASH
             totalAmountOrders,
             perPage: resPerPage,
+            meta: {
+              hasCashOrders: ordersCashCount > 0, // Indicateur présence paiements CASH
+            },
           },
         },
         { status: 200 },
