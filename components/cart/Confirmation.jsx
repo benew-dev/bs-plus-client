@@ -113,7 +113,7 @@ const Confirmation = () => {
             </div>
 
             {paymentTypes && paymentTypes.length > 0 ? (
-              <div className="grid gap-4">
+              <div className="flex flex-col gap-4">
                 {paymentTypes.map((payment, index) => {
                   const config = PLATFORM_CONFIG[payment?.platform] || {
                     color: "bg-gray-100 text-gray-700 border-gray-200",
@@ -128,47 +128,61 @@ const Confirmation = () => {
                       key={payment._id || index}
                       className="group relative p-5 bg-white rounded-xl border-2 border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all duration-300"
                     >
-                      {/* Badge plateforme */}
-                      <div className="flex items-center justify-between mb-4">
-                        <div
-                          className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold ${config.color} border`}
-                        >
-                          <IconComponent className="w-4 h-4" />
-                          <span>{config.displayName}</span>
+                      <div className="flex items-center gap-6">
+                        {/* Icône de la plateforme */}
+                        <div className={`flex-shrink-0 p-4 rounded-xl ${config.color} border-2`}>
+                          <IconComponent className="w-8 h-8" />
+                        </div>
+
+                        {/* Contenu principal - responsive */}
+                        <div className="flex-1 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                          {/* Section gauche - Nom de la plateforme */}
+                          <div className="flex items-center gap-3">
+                            <h3 className="text-xl font-bold text-gray-900">
+                              {config.displayName}
+                            </h3>
+                            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${config.color} border`}>
+                              Disponible
+                            </span>
+                          </div>
+
+                          {/* Section droite - Informations de paiement */}
+                          {isCash ? (
+                            <div className="flex items-center gap-2">
+                              <div className="px-4 py-2 bg-emerald-50 rounded-lg border border-emerald-200">
+                                <p className="text-sm text-emerald-700 font-medium">
+                                  Paiement à la livraison
+                                </p>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                              {/* Titulaire */}
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs text-gray-500 uppercase">
+                                  Titulaire:
+                                </span>
+                                <span className="font-semibold text-gray-900">
+                                  {payment?.name || "Non renseigné"}
+                                </span>
+                              </div>
+
+                              {/* Séparateur */}
+                              <div className="hidden sm:block w-px h-8 bg-gray-300"></div>
+
+                              {/* Numéro */}
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs text-gray-500 uppercase">
+                                  N°:
+                                </span>
+                                <span className="font-mono font-bold text-gray-900">
+                                  {payment?.number || "Non renseigné"}
+                                </span>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
-
-                      {/* Informations de paiement */}
-                      {isCash ? (
-                        <div className="space-y-3">
-                          <div className="p-3 bg-emerald-50 rounded-lg">
-                            <p className="text-sm text-emerald-700">
-                              Le paiement sera effectué en espèces à la
-                              livraison de votre commande.
-                            </p>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="space-y-3">
-                          <div>
-                            <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">
-                              Nom du titulaire
-                            </p>
-                            <p className="font-semibold text-gray-900 text-lg">
-                              {payment?.name || "Non renseigné"}
-                            </p>
-                          </div>
-
-                          <div>
-                            <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">
-                              Numéro de compte
-                            </p>
-                            <p className="font-mono font-bold text-gray-900 text-lg tracking-wider">
-                              {payment?.number || "Non renseigné"}
-                            </p>
-                          </div>
-                        </div>
-                      )}
 
                       {/* Indicateur hover */}
                       <div className="absolute top-0 right-0 w-2 h-full bg-blue-500 rounded-r-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
