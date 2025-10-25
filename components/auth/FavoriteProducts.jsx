@@ -5,14 +5,19 @@ import { Heart, Package, Trash2, ShoppingCart } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { toast } from "react-toastify";
+import { useSession } from "next-auth/react"; // ✅ AJOUT
 import AuthContext from "@/context/AuthContext";
 import CartContext from "@/context/CartContext";
 
 const FavoriteProducts = () => {
   const { user, toggleFavorite } = useContext(AuthContext);
   const { addItemToCart } = useContext(CartContext);
+
+  // ✅ AJOUT: Écouter les changements de session
+  const { data: session } = useSession();
+
   const [isClient, setIsClient] = useState(false);
-  const [removingIds, setRemovingIds] = useState(null);
+  const [removingIds, setRemovingIds] = useState(new Set()); // ✅ Utiliser Set pour tracking
 
   useEffect(() => {
     setIsClient(true);
@@ -20,14 +25,18 @@ const FavoriteProducts = () => {
 
   const handleRemoveFavorite = async (productId, productName) => {
     try {
-      setRemovingIds((prev) => new Set(prev).add(productId)); // ✅ Ajouter
-      await toggleFavorite(productId, productName, "remove");
+      // ✅ Ajouter au Set des IDs en cours de suppression
+      setRemovingIds((prev) => new Set(prev).add(productId));
+
+      await toggleFavorite(productId, productName, null, "remove");
     } catch (error) {
       console.error("Error removing favorite:", error);
+      toast.error("Erreur lors de la suppression du favori");
     } finally {
+      // ✅ Retirer du Set après l'opération
       setRemovingIds((prev) => {
         const newSet = new Set(prev);
-        newSet.delete(productId); // ✅ Retirer
+        newSet.delete(productId);
         return newSet;
       });
     }
@@ -68,7 +77,9 @@ const FavoriteProducts = () => {
     );
   }
 
-  const favorites = user?.favorites || [];
+  // ✅ Utiliser session comme source de vérité, avec fallback sur contexte
+  const currentUser = session?.user || user;
+  const favorites = currentUser?.favorites || [];
   const hasFavorites = favorites.length > 0;
 
   if (!hasFavorites) {
@@ -122,86 +133,95 @@ const FavoriteProducts = () => {
 
       {/* Grid de produits favoris */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {favorites.map((favorite) => (
-          <article
-            key={favorite.productId}
-            className="group bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-300"
-          >
-            <Link href={`/shop/${favorite.productId}`} className="block">
-              {/* Image du produit */}
-              <div className="relative w-full h-48 bg-gray-50 overflow-hidden">
-                {favorite.productImage?.url ? (
-                  <Image
-                    src={favorite.productImage.url}
-                    alt={favorite.productName}
-                    fill
-                    className="object-contain group-hover:scale-105 transition-transform duration-500 p-2"
-                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    onError={(e) => {
-                      e.currentTarget.src = "/images/default_product.png";
-                    }}
-                  />
-                ) : (
-                  <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-                    <Package className="w-16 h-16 text-gray-300" />
-                  </div>
-                )}
-              </div>
+        {favorites.map((favorite) => {
+          // ✅ Vérifier si ce produit est en cours de suppression
+          const isRemoving = removingIds.has(favorite.productId);
 
-              {/* Contenu */}
-              <div className="p-4 space-y-3">
-                {/* Nom du produit */}
-                <h3 className="font-semibold text-base text-gray-900 line-clamp-2 min-h-[3rem] group-hover:text-blue-600 transition-colors">
-                  {favorite.productName}
-                </h3>
-
-                {/* Date d'ajout */}
-                <p className="text-xs text-gray-500">
-                  Ajouté le{" "}
-                  {new Date(favorite.addedAt).toLocaleDateString("fr-FR", {
-                    day: "numeric",
-                    month: "long",
-                    year: "numeric",
-                  })}
-                </p>
-
-                {/* Actions */}
-                <div className="flex items-center gap-2 pt-2">
-                  {/* Bouton Ajouter au panier */}
-                  <button
-                    onClick={(e) => handleAddToCart(favorite.productId, e)}
-                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-                    aria-label="Ajouter au panier"
-                  >
-                    <ShoppingCart className="w-4 h-4" />
-                    <span>Ajouter</span>
-                  </button>
-
-                  {/* Bouton Retirer des favoris */}
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      handleRemoveFavorite(
-                        favorite.productId,
-                        favorite.productName,
-                      );
-                    }}
-                    disabled={removingIds?.has(favorite.productId)} // ✅ Utiliser .has()
-                    className="p-2 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    aria-label="Retirer des favoris"
-                  >
-                    {removingIds === favorite.productId ? (
-                      <div className="w-5 h-5 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
-                    ) : (
-                      <Trash2 className="w-5 h-5" />
-                    )}
-                  </button>
+          return (
+            <article
+              key={favorite.productId}
+              className={`group bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-300 ${
+                isRemoving ? "opacity-50 scale-95" : ""
+              }`}
+            >
+              <Link href={`/shop/${favorite.productId}`} className="block">
+                {/* Image du produit */}
+                <div className="relative w-full h-48 bg-gray-50 overflow-hidden">
+                  {favorite.productImage?.url ? (
+                    <Image
+                      src={favorite.productImage.url}
+                      alt={favorite.productName}
+                      fill
+                      className="object-contain group-hover:scale-105 transition-transform duration-500 p-2"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      onError={(e) => {
+                        e.currentTarget.src = "/images/default_product.png";
+                      }}
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+                      <Package className="w-16 h-16 text-gray-300" />
+                    </div>
+                  )}
                 </div>
-              </div>
-            </Link>
-          </article>
-        ))}
+
+                {/* Contenu */}
+                <div className="p-4 space-y-3">
+                  {/* Nom du produit */}
+                  <h3 className="font-semibold text-base text-gray-900 line-clamp-2 min-h-[3rem] group-hover:text-blue-600 transition-colors">
+                    {favorite.productName}
+                  </h3>
+
+                  {/* Date d'ajout */}
+                  <p className="text-xs text-gray-500">
+                    Ajouté le{" "}
+                    {new Date(favorite.addedAt).toLocaleDateString("fr-FR", {
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                    })}
+                  </p>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-2 pt-2">
+                    {/* Bouton Ajouter au panier */}
+                    <button
+                      onClick={(e) => handleAddToCart(favorite.productId, e)}
+                      disabled={isRemoving}
+                      className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                      aria-label="Ajouter au panier"
+                    >
+                      <ShoppingCart className="w-4 h-4" />
+                      <span>Ajouter</span>
+                    </button>
+
+                    {/* Bouton Retirer des favoris */}
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleRemoveFavorite(
+                          favorite.productId,
+                          favorite.productName,
+                        );
+                      }}
+                      disabled={isRemoving}
+                      className="p-2 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      aria-label="Retirer des favoris"
+                    >
+                      {isRemoving ? (
+                        // ✅ Spinner amélioré
+                        <div className="w-5 h-5 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+                      ) : (
+                        <Trash2 className="w-5 h-5" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </Link>
+            </article>
+          );
+        })}
       </div>
     </div>
   );

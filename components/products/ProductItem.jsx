@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import Link from "next/link";
 import Image from "next/image";
 import { Heart, ShoppingCart } from "lucide-react";
+import { useSession } from "next-auth/react"; // ✅ AJOUT
 
 import CartContext from "@/context/CartContext";
 import { INCREASE } from "@/helpers/constants";
@@ -13,6 +14,9 @@ import AuthContext from "@/context/AuthContext";
 const ProductItem = memo(({ product }) => {
   const { addItemToCart, updateCart, cart } = useContext(CartContext);
   const { user, toggleFavorite } = useContext(AuthContext);
+
+  // ✅ AJOUT: Écouter les changements de session pour synchronisation en temps réel
+  const { data: session } = useSession();
 
   // ✅ État de loading pour le bouton Favoris
   const [favoriteLoading, setFavoriteLoading] = useState(false);
@@ -31,15 +35,27 @@ const ProductItem = memo(({ product }) => {
   // URL de l'image avec fallback
   const imageUrl = product.images?.[0]?.url || "/images/default_product.png";
 
-  // ✅ Calculer si le produit est dans les favoris
+  // ✅ AMÉLIORATION: Calculer si le produit est dans les favoris en utilisant session ET context
   const isFavorite = useMemo(() => {
-    if (!user || !user.favorites || !Array.isArray(user.favorites)) {
+    // Priorité à la session (source de vérité)
+    const sessionUser = session?.user;
+    const contextUser = user;
+
+    // Utiliser la session si disponible, sinon le contexte
+    const currentUser = sessionUser || contextUser;
+
+    if (
+      !currentUser ||
+      !currentUser.favorites ||
+      !Array.isArray(currentUser.favorites)
+    ) {
       return false;
     }
-    return user.favorites.some(
+
+    return currentUser.favorites.some(
       (fav) => fav.productId?.toString() === productId,
     );
-  }, [user, productId]);
+  }, [session, user, productId]); // ✅ Dépendances: session, user, productId
 
   // Handler pour ajouter au panier
   const addToCartHandler = useCallback(
@@ -71,11 +87,16 @@ const ProductItem = memo(({ product }) => {
     [user, cart, productId, updateCart, addItemToCart],
   );
 
-  // ✅ Handler pour les favoris avec état de loading
+  // ✅ AMÉLIORATION: Handler pour les favoris avec gestion du loading et prévention des clics multiples
   const toggleFavoriteHandler = useCallback(
     async (e) => {
       e.preventDefault();
       e.stopPropagation();
+
+      // ✅ Empêcher les clics multiples
+      if (favoriteLoading) {
+        return;
+      }
 
       if (!user) {
         return toast.error(
@@ -85,7 +106,7 @@ const ProductItem = memo(({ product }) => {
 
       setFavoriteLoading(true);
       try {
-        // ✅ Préparer l'image du produit
+        // Préparer l'image du produit
         const productImage = product.images?.[0] || {
           public_id: null,
           url: null,
@@ -100,7 +121,14 @@ const ProductItem = memo(({ product }) => {
         setFavoriteLoading(false);
       }
     },
-    [user, productId, productName, product.images, toggleFavorite],
+    [
+      user,
+      productId,
+      productName,
+      product.images,
+      toggleFavorite,
+      favoriteLoading,
+    ],
   );
 
   return (
@@ -117,28 +145,34 @@ const ProductItem = memo(({ product }) => {
           </div>
         )}
 
-        {/* ✅ Bouton Favoris avec état de loading */}
+        {/* ✅ Bouton Favoris avec état de loading et état visuel amélioré */}
         <button
           onClick={toggleFavoriteHandler}
           disabled={favoriteLoading}
-          className={`absolute top-3 right-3 z-10 backdrop-blur-sm p-2 rounded-full shadow-md hover:scale-110 transition-all duration-200 ${
-            isFavorite ? "bg-pink-50" : "bg-white/90 hover:bg-white"
-          } ${favoriteLoading ? "opacity-60 cursor-not-allowed" : ""}`}
+          className={`absolute top-3 right-3 z-10 backdrop-blur-sm p-2 rounded-full shadow-md transition-all duration-200 ${
+            isFavorite
+              ? "bg-pink-50 hover:bg-pink-100"
+              : "bg-white/90 hover:bg-white"
+          } ${
+            favoriteLoading
+              ? "opacity-60 cursor-not-allowed scale-95"
+              : "hover:scale-110"
+          }`}
           aria-label={
             isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"
           }
           aria-busy={favoriteLoading}
         >
           {favoriteLoading ? (
-            // Spinner de loading
+            // ✅ Spinner de loading amélioré
             <div className="w-4 h-4 border-2 border-pink-600 border-t-transparent rounded-full animate-spin" />
           ) : (
-            // Icône Cœur
+            // ✅ Icône Cœur avec animation
             <Heart
-              className={`w-4 h-4 transition-colors duration-200 ${
+              className={`w-4 h-4 transition-all duration-200 ${
                 isFavorite
-                  ? "fill-pink-500 stroke-pink-500"
-                  : "stroke-gray-700 hover:stroke-pink-500"
+                  ? "fill-pink-500 stroke-pink-500 scale-110"
+                  : "stroke-gray-700 hover:stroke-pink-500 hover:scale-105"
               }`}
             />
           )}
