@@ -1,12 +1,11 @@
 "use client";
 
 import { memo, useState } from "react";
-import { User, Heart } from "lucide-react";
+import { User } from "lucide-react";
 import Profile from "./Profile";
-import FavoriteProducts from "./FavoriteProducts";
 
 const ProfileWithTabs = () => {
-  // ✅ Plus de props
+  // ✅ Un seul onglet maintenant
   const [activeTab, setActiveTab] = useState("profile");
 
   const tabs = [
@@ -15,28 +14,24 @@ const ProfileWithTabs = () => {
       label: "Mon Profil",
       icon: User,
     },
-    {
-      id: "favorites",
-      label: "Mes Favoris",
-      icon: Heart,
-    },
   ];
 
   return (
     <div className="space-y-6">
-      {/* Tabs Navigation */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="border-b border-gray-200">
-          <nav className="flex -mb-px" aria-label="Tabs">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              const isActive = activeTab === tab.id;
+      {/* Tabs Navigation - optionnel maintenant qu'il n'y a qu'un seul onglet */}
+      {tabs.length > 1 && (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+          <div className="border-b border-gray-200">
+            <nav className="flex -mb-px" aria-label="Tabs">
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                const isActive = activeTab === tab.id;
 
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`
                     flex-1 flex items-center justify-center gap-2 py-4 px-6
                     text-sm font-medium border-b-2 transition-all duration-200
                     ${
@@ -45,23 +40,23 @@ const ProfileWithTabs = () => {
                         : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                     }
                   `}
-                  aria-current={isActive ? "page" : undefined}
-                >
-                  <Icon
-                    className={`w-5 h-5 ${isActive ? "text-blue-600" : "text-gray-400"}`}
-                  />
-                  <span>{tab.label}</span>
-                </button>
-              );
-            })}
-          </nav>
+                    aria-current={isActive ? "page" : undefined}
+                  >
+                    <Icon
+                      className={`w-5 h-5 ${isActive ? "text-blue-600" : "text-gray-400"}`}
+                    />
+                    <span>{tab.label}</span>
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Tab Content */}
       <div className="min-h-[400px]">
         {activeTab === "profile" && <Profile />}
-        {activeTab === "favorites" && <FavoriteProducts />}
       </div>
     </div>
   );

@@ -13,7 +13,7 @@ import Image from "next/image";
 import CartContext from "@/context/CartContext";
 import { signOut, useSession } from "next-auth/react";
 import AuthContext from "@/context/AuthContext";
-import { Menu, ShoppingCart, User, X } from "lucide-react";
+import { Menu, ShoppingCart, User, X, Heart } from "lucide-react";
 
 // Constantes
 const CART_LOAD_DELAY = 500;
@@ -245,6 +245,9 @@ const Header = () => {
     setMobileMenuOpen(!mobileMenuOpen);
   };
 
+  // Calculer le nombre de favoris
+  const favoritesCount = user?.favorites?.length || 0;
+
   return (
     <header className="bg-white py-2 border-b sticky top-0 z-50 shadow-sm">
       <div className="container max-w-[1440px] mx-auto px-4">
@@ -278,6 +281,23 @@ const Header = () => {
 
           {/* Icons Desktop + Mobile */}
           <div className="flex items-center gap-3">
+            {/* Icône Favoris - visible uniquement si connecté */}
+            {user && (
+              <Link
+                href="/favorites"
+                className="relative p-2 text-gray-700 hover:text-pink-600 transition-colors"
+                aria-label="Mes favoris"
+                title="Accéder à mes favoris"
+              >
+                <Heart className="w-6 h-6" />
+                {favoritesCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-pink-500 text-white rounded-full min-w-[20px] h-5 px-1 flex items-center justify-center text-xs font-medium">
+                    {favoritesCount}
+                  </span>
+                )}
+              </Link>
+            )}
+
             {/* Icône Panier */}
             <Link
               href="/cart"
