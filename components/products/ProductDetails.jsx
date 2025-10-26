@@ -10,7 +10,7 @@ import {
 } from "react";
 import dynamic from "next/dynamic";
 import { toast } from "react-toastify";
-import PropTypes from "prop-types"; // Pour la validation des props
+import PropTypes from "prop-types";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -19,15 +19,14 @@ import CartContext from "@/context/CartContext";
 import { isArrayEmpty } from "@/helpers/helpers";
 import { INCREASE } from "@/helpers/constants";
 
-// Pour la sécurité - nécessite d'installer cette dépendance
-// npm install dompurify
 import DOMPurify from "dompurify";
-import { Share2, ShoppingCart, Star, Truck } from "lucide-react";
+import { Share2, ShoppingCart, Star, Truck, Heart } from "lucide-react"; // ✅ Ajout de Heart
 import { useSwipeable } from "react-swipeable";
+import { useSession } from "next-auth/react"; // ✅ Ajout
 
 // Chargement dynamique des composants
 const BreadCrumbs = dynamic(() => import("@/components/layouts/BreadCrumbs"), {
-  ssr: true, // Enable SSR for SEO
+  ssr: true,
   loading: () => (
     <div className="h-8 bg-gray-100 rounded-lg animate-pulse"></div>
   ),
@@ -46,7 +45,6 @@ const ProductImageGallery = memo(function ProductImageGallery({
   selectedImage,
   onImageSelect,
 }) {
-  // Si pas d'images disponibles, utiliser l'image par défaut
   const defaultImage = "/images/default_product.png";
   const productImages =
     product?.images?.length > 0 ? product.images : [{ url: defaultImage }];
@@ -65,20 +63,17 @@ const ProductImageGallery = memo(function ProductImageGallery({
             alt={product?.name || "Product image"}
             width={400}
             height={400}
-            priority={true} // Load this image early
+            priority={true}
             quality={85}
             placeholder="blur"
             blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+P+/HgAEtAJJXIDTiQAAAABJRU5ErkJggg=="
           />
         </div>
 
-        {/* Overlay de zoom (à implémenter avec une librairie comme react-medium-image-zoom) */}
         <button
           className="absolute top-2 right-2 bg-white rounded-full p-1 shadow-sm opacity-70 hover:opacity-100 transition-opacity"
           aria-label="Zoom image"
-          onClick={() => {
-            /* Intégrer une fonction de zoom ici */
-          }}
+          onClick={() => {}}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -97,7 +92,6 @@ const ProductImageGallery = memo(function ProductImageGallery({
         </button>
       </div>
 
-      {/* Thumbnails gallery */}
       <div
         className="space-x-2 overflow-x-auto pb-3 flex flex-nowrap scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 -mx-2 px-2 hide-scrollbar sm:flex-wrap"
         aria-label="Product thumbnail images"
@@ -138,8 +132,10 @@ const ProductInfo = memo(function ProductInfo({
   onAddToCart,
   isAddingToCart,
   onShare,
+  isFavorite, // ✅ Nouvelle prop
+  onToggleFavorite, // ✅ Nouvelle prop
+  favoriteLoading, // ✅ Nouvelle prop
 }) {
-  // Formattage du prix mémoïsé
   const formattedPrice = useMemo(
     () => formatPrice(product?.price),
     [product?.price],
@@ -147,9 +143,44 @@ const ProductInfo = memo(function ProductInfo({
 
   return (
     <main>
-      <h1 className="font-semibold text-xl sm:text-2xl mb-4 text-gray-800">
-        {product?.name || "Product Not Available"}
-      </h1>
+      {/* ✅ Ajout du bouton favoris en haut à droite du titre */}
+      <div className="flex items-start justify-between mb-4">
+        <h1 className="font-semibold text-xl sm:text-2xl text-gray-800 flex-1">
+          {product?.name || "Product Not Available"}
+        </h1>
+
+        {/* ✅ Bouton Favoris */}
+        <button
+          onClick={onToggleFavorite}
+          disabled={favoriteLoading}
+          className={`ml-4 flex-shrink-0 backdrop-blur-sm p-2.5 rounded-full shadow-md transition-all duration-200 ${
+            isFavorite
+              ? "bg-pink-50 hover:bg-pink-100"
+              : "bg-white hover:bg-gray-50"
+          } ${
+            favoriteLoading
+              ? "opacity-60 cursor-not-allowed scale-95"
+              : "hover:scale-110"
+          }`}
+          aria-label={
+            isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"
+          }
+          aria-busy={favoriteLoading}
+          title={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+        >
+          {favoriteLoading ? (
+            <div className="w-5 h-5 border-2 border-pink-600 border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <Heart
+              className={`w-5 h-5 transition-all duration-200 ${
+                isFavorite
+                  ? "fill-pink-500 stroke-pink-500 scale-110"
+                  : "stroke-gray-700 hover:stroke-pink-500 hover:scale-105"
+              }`}
+            />
+          )}
+        </button>
+      </div>
 
       <div className="flex flex-wrap items-center space-x-2 mb-2">
         {product?.verified && (
@@ -179,7 +210,6 @@ const ProductInfo = memo(function ProductInfo({
           {formattedPrice}
         </p>
 
-        {/* Afficher un prix barré si c'est pertinent */}
         {product?.oldPrice && (
           <p className="text-sm sm:text-base text-gray-500 line-through">
             {formatPrice(product.oldPrice)}
@@ -187,7 +217,6 @@ const ProductInfo = memo(function ProductInfo({
         )}
       </div>
 
-      {/* Description sécurisée contre XSS */}
       {product?.description ? (
         <div
           className="mb-6 text-gray-600 leading-relaxed"
@@ -201,7 +230,6 @@ const ProductInfo = memo(function ProductInfo({
         </p>
       )}
 
-      {/* Bouton d'ajout au panier */}
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
         <button
           className={`w-full sm:w-auto px-6 py-3 inline-block text-white font-medium text-center rounded-lg transition-colors 
@@ -256,7 +284,6 @@ const ProductInfo = memo(function ProductInfo({
         </button>
       </div>
 
-      {/* Informations supplémentaires */}
       <ul className="mb-5 text-gray-600">
         <li className="mb-2 flex">
           <span className="font-medium w-36 inline-block">Disponibilité:</span>
@@ -306,7 +333,6 @@ const ProductInfo = memo(function ProductInfo({
         </li>
       </ul>
 
-      {/* Badge de popularité basé sur les ventes */}
       {product?.sold > 10 && (
         <div className="mt-4 flex flex-row bg-amber-50 border border-amber-100 rounded-lg px-3 py-2 text-amber-700 text-sm mr-2">
           <Truck className="mr-1" />
@@ -314,7 +340,6 @@ const ProductInfo = memo(function ProductInfo({
         </div>
       )}
 
-      {/* Indiquer quand le produit est récent (moins de 30 jours) */}
       {product?.createdAt &&
         new Date(product.createdAt) >
           new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) && (
@@ -331,35 +356,31 @@ const RelatedProductsCarousel = memo(function RelatedProductsCarousel({
   products,
   currentProductId,
 }) {
-  // États pour la gestion du carrousel
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isAutoScrolling, setIsAutoScrolling] = useState(true);
   const [slidesPerView, setSlidesPerView] = useState(4);
 
-  // Filtrer les produits pour exclure le produit actuel
   const filteredProducts = useMemo(
     () =>
       products?.filter((product) => product?._id !== currentProductId) || [],
     [products, currentProductId],
   );
 
-  // Si aucun produit similaire, ne pas afficher la section
   if (isArrayEmpty(filteredProducts)) {
     return null;
   }
 
-  // Gestion responsive du nombre de slides visibles par vue
   useEffect(() => {
     const updateSlidesPerView = () => {
       const width = window.innerWidth;
       if (width < 640) {
-        setSlidesPerView(1); // Mobile: 1 slide visible
+        setSlidesPerView(1);
       } else if (width < 768) {
-        setSlidesPerView(2); // Small tablet: 2 slides visibles
+        setSlidesPerView(2);
       } else if (width < 1024) {
-        setSlidesPerView(3); // Tablet: 3 slides visibles
+        setSlidesPerView(3);
       } else {
-        setSlidesPerView(4); // Desktop: 4 slides visibles
+        setSlidesPerView(4);
       }
     };
 
@@ -368,12 +389,10 @@ const RelatedProductsCarousel = memo(function RelatedProductsCarousel({
     return () => window.removeEventListener("resize", updateSlidesPerView);
   }, []);
 
-  // Calculer l'index maximum pour la navigation
   const maxSlideIndex = useMemo(() => {
     return Math.max(0, filteredProducts.length - slidesPerView);
   }, [filteredProducts.length, slidesPerView]);
 
-  // Auto-scroll (optionnel - activé par défaut)
   useEffect(() => {
     if (!isAutoScrolling || filteredProducts.length <= slidesPerView) {
       return;
@@ -381,26 +400,21 @@ const RelatedProductsCarousel = memo(function RelatedProductsCarousel({
 
     const interval = setInterval(() => {
       setCurrentSlide((prevSlide) => {
-        // Retour au début après le dernier slide
         if (prevSlide >= maxSlideIndex) {
           return 0;
         }
         return prevSlide + 1;
       });
-    }, 4000); // 4 secondes entre chaque défilement
+    }, 4000);
 
     return () => clearInterval(interval);
   }, [isAutoScrolling, maxSlideIndex, filteredProducts.length, slidesPerView]);
 
-  // Calculer le décalage pour l'animation
   const translateX = useMemo(() => {
-    // Chaque produit occupe (100 / slidesPerView)% de la largeur visible
-    // On déplace d'un produit à la fois
     const slideWidth = 100 / slidesPerView;
     return -(currentSlide * slideWidth);
   }, [currentSlide, slidesPerView]);
 
-  // Reprendre l'auto-scroll après 10 secondes d'inactivité
   useEffect(() => {
     if (!isAutoScrolling) {
       const timeout = setTimeout(() => {
@@ -410,41 +424,33 @@ const RelatedProductsCarousel = memo(function RelatedProductsCarousel({
     }
   }, [isAutoScrolling]);
 
-  // Calculer le nombre de "pages" pour les indicateurs (dots)
   const totalDots = useMemo(() => {
-    // Si on a moins de produits que de slides visibles, pas besoin de pagination
     if (filteredProducts.length <= slidesPerView) return 0;
-    // Sinon, on a autant de dots que de positions possibles
     return maxSlideIndex + 1;
   }, [filteredProducts.length, slidesPerView, maxSlideIndex]);
 
-  // Configuration du swipe avec react-swipeable
   const handlers = useSwipeable({
     onSwipedLeft: () => {
-      // Aller au slide suivant
       if (currentSlide < maxSlideIndex) {
         setCurrentSlide((prev) => prev + 1);
         setIsAutoScrolling(false);
       }
     },
     onSwipedRight: () => {
-      // Aller au slide précédent
       if (currentSlide > 0) {
         setCurrentSlide((prev) => prev - 1);
         setIsAutoScrolling(false);
       }
     },
-    onSwiping: (eventData) => {
-      // Optionnel : retour visuel pendant le swipe
-      // Vous pouvez utiliser eventData.deltaX pour animer le carousel pendant le swipe
+    onSwiping: () => {
       setIsAutoScrolling(false);
     },
-    preventScrollOnSwipe: true, // Empêcher le scroll vertical pendant le swipe horizontal
-    trackMouse: true, // Permettre le swipe avec la souris (utile pour tester)
-    trackTouch: true, // Activer le swipe tactile
-    delta: 50, // Distance minimum pour déclencher un swipe (en pixels)
-    swipeDuration: 500, // Durée maximum du swipe (en ms)
-    rotationAngle: 15, // Angle de tolérance pour détecter un swipe horizontal
+    preventScrollOnSwipe: true,
+    trackMouse: true,
+    trackTouch: true,
+    delta: 50,
+    swipeDuration: 500,
+    rotationAngle: 15,
   });
 
   return (
@@ -457,16 +463,13 @@ const RelatedProductsCarousel = memo(function RelatedProductsCarousel({
           Produits similaires
         </h2>
 
-        {/* Indicateur du nombre de produits */}
         <span className="text-sm text-gray-500">
           {filteredProducts.length} produit
           {filteredProducts.length > 1 ? "s" : ""}
         </span>
       </div>
 
-      {/* Container du carrousel */}
       <div className="relative group">
-        {/* Container avec overflow hidden */}
         <div {...handlers} className="overflow-hidden rounded-lg">
           <div
             className="flex transition-transform duration-500 ease-in-out"
@@ -474,13 +477,11 @@ const RelatedProductsCarousel = memo(function RelatedProductsCarousel({
               transform: `translateX(${translateX}%)`,
             }}
           >
-            {/* CHAQUE PRODUIT = UN SLIDE INDIVIDUEL */}
             {filteredProducts.map((product) => (
               <div
                 key={product?._id}
                 className="flex-shrink-0 px-2"
                 style={{
-                  // Chaque slide occupe exactement la largeur nécessaire selon slidesPerView
                   width: `${100 / slidesPerView}%`,
                 }}
               >
@@ -488,7 +489,6 @@ const RelatedProductsCarousel = memo(function RelatedProductsCarousel({
                   href={`/product/${product?._id}`}
                   className="group/card block bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 border border-gray-200 hover:border-blue-100 transform hover:-translate-y-1 h-full"
                 >
-                  {/* Image du produit */}
                   <div className="aspect-square mb-4 bg-gray-100 rounded-lg overflow-hidden relative">
                     <Image
                       src={
@@ -505,7 +505,6 @@ const RelatedProductsCarousel = memo(function RelatedProductsCarousel({
                       }}
                     />
 
-                    {/* Badge si le produit est nouveau */}
                     {product?.createdAt &&
                       new Date(product.createdAt) >
                         new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) && (
@@ -514,7 +513,6 @@ const RelatedProductsCarousel = memo(function RelatedProductsCarousel({
                         </div>
                       )}
 
-                    {/* Badge si rupture de stock */}
                     {product?.stock === 0 && (
                       <div className="absolute top-2 right-2 bg-red-600 text-white text-xs px-2 py-1 rounded-full font-medium">
                         Épuisé
@@ -522,7 +520,6 @@ const RelatedProductsCarousel = memo(function RelatedProductsCarousel({
                     )}
                   </div>
 
-                  {/* Informations du produit */}
                   <div className="space-y-2">
                     <h3 className="font-medium text-gray-800 group-hover/card:text-blue-600 transition-colors line-clamp-2 text-sm leading-tight min-h-[2.5rem]">
                       {product?.name || "Produit sans nom"}
@@ -533,7 +530,6 @@ const RelatedProductsCarousel = memo(function RelatedProductsCarousel({
                         {formatPrice(product?.price)}
                       </p>
 
-                      {/* Indicateur de stock */}
                       {product?.stock > 0 && (
                         <span className="text-xs text-green-600 font-medium">
                           En stock
@@ -541,7 +537,6 @@ const RelatedProductsCarousel = memo(function RelatedProductsCarousel({
                       )}
                     </div>
 
-                    {/* Catégorie */}
                     {product?.category?.categoryName && (
                       <p className="text-xs text-gray-500">
                         {product.category.categoryName}
@@ -554,7 +549,6 @@ const RelatedProductsCarousel = memo(function RelatedProductsCarousel({
           </div>
         </div>
 
-        {/* Indicateurs de pagination (dots) - Seulement si navigation nécessaire */}
         {totalDots > 1 && (
           <div className="flex justify-center mt-4 space-x-2">
             {Array.from({ length: totalDots }).map((_, dotIndex) => (
@@ -576,7 +570,6 @@ const RelatedProductsCarousel = memo(function RelatedProductsCarousel({
         )}
       </div>
 
-      {/* Message si tous les produits sont visibles */}
       {filteredProducts.length <= slidesPerView &&
         filteredProducts.length > 0 && (
           <p className="text-center text-sm text-gray-500 mt-4">
@@ -587,19 +580,21 @@ const RelatedProductsCarousel = memo(function RelatedProductsCarousel({
   );
 });
 
-// Composant principal
+// ✅ Composant principal avec fonctionnalités favoris
 function ProductDetails({ product, sameCategoryProducts }) {
-  const { user } = useContext(AuthContext);
+  const { user, toggleFavorite } = useContext(AuthContext); // ✅ Ajout toggleFavorite
   const { addItemToCart, updateCart, cart, error, clearError } =
     useContext(CartContext);
 
-  // État pour l'image sélectionnée
-  const [selectedImage, setSelectedImage] = useState(null);
+  // ✅ Écouter les changements de session
+  const { data: session } = useSession();
 
-  // État pour le feedback d'ajout au panier
+  const [selectedImage, setSelectedImage] = useState(null);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
 
-  // Définir l'image sélectionnée au chargement ou quand le produit change
+  // ✅ État pour le bouton favoris
+  const [favoriteLoading, setFavoriteLoading] = useState(false);
+
   useEffect(() => {
     if (product?.images && product.images.length > 0) {
       setSelectedImage(product.images[0]?.url);
@@ -608,7 +603,6 @@ function ProductDetails({ product, sameCategoryProducts }) {
     }
   }, [product]);
 
-  // Handle auth context updates
   useEffect(() => {
     if (error) {
       toast.error(error);
@@ -616,13 +610,11 @@ function ProductDetails({ product, sameCategoryProducts }) {
     }
   }, [error, clearError]);
 
-  // Vérifier si le produit est en stock - memoized
   const inStock = useMemo(() => {
     if (!product || product?.stock === undefined) return false;
     return product.stock >= 1;
   }, [product]);
 
-  // Définir les breadcrumbs une seule fois
   const breadCrumbs = useMemo(() => {
     if (!product) return null;
 
@@ -644,9 +636,69 @@ function ProductDetails({ product, sameCategoryProducts }) {
     ];
   }, [product]);
 
-  // Gérer l'ajout au panier
+  // ✅ Calculer si le produit est dans les favoris
+  const isFavorite = useMemo(() => {
+    const sessionUser = session?.user;
+    const contextUser = user;
+    const currentUser = sessionUser || contextUser;
+
+    if (
+      !currentUser ||
+      !currentUser.favorites ||
+      !Array.isArray(currentUser.favorites)
+    ) {
+      return false;
+    }
+
+    return currentUser.favorites.some(
+      (fav) => fav.productId?.toString() === product?._id,
+    );
+  }, [session, user, product?._id]);
+
+  // ✅ Handler pour toggle favoris
+  const handleToggleFavorite = useCallback(
+    async (e) => {
+      e?.preventDefault();
+      e?.stopPropagation();
+
+      if (favoriteLoading) {
+        return;
+      }
+
+      if (!user) {
+        return toast.error(
+          "Connectez-vous pour ajouter des produits à vos favoris !",
+        );
+      }
+
+      if (!product || !product._id) {
+        return toast.error("Produit invalide");
+      }
+
+      setFavoriteLoading(true);
+      try {
+        const productImage = product.images?.[0] || {
+          public_id: null,
+          url: null,
+        };
+
+        await toggleFavorite(
+          product._id,
+          product.name,
+          productImage,
+          isFavorite ? "remove" : "add",
+        );
+      } catch (error) {
+        console.error("Error toggling favorite:", error);
+        toast.error("Erreur lors de la mise à jour des favoris");
+      } finally {
+        setFavoriteLoading(false);
+      }
+    },
+    [user, product, toggleFavorite, favoriteLoading, isFavorite],
+  );
+
   const handleAddToCart = useCallback(() => {
-    // Sécurité et validation
     if (!product || !product._id) {
       toast.error("Produit invalide");
       return;
@@ -664,7 +716,7 @@ function ProductDetails({ product, sameCategoryProducts }) {
       return;
     }
 
-    if (isAddingToCart) return; // Éviter les clics multiples
+    if (isAddingToCart) return;
 
     setIsAddingToCart(true);
 
@@ -684,18 +736,14 @@ function ProductDetails({ product, sameCategoryProducts }) {
       console.error("Error adding item to cart:", error);
       toast.error("Erreur lors de l'ajout au panier. Veuillez réessayer.");
     } finally {
-      // Ajouter un délai minimum pour éviter le flickering de l'UI
       setTimeout(() => {
         setIsAddingToCart(false);
       }, 500);
     }
   }, [product, user, cart, inStock, addItemToCart, updateCart, isAddingToCart]);
 
-  // Fonction pour partager le produit
   const handleShare = useCallback(() => {
-    // Vérifier si l'API Web Share est disponible
     if (navigator.share) {
-      // Utiliser l'API Web Share (mobile)
       navigator
         .share({
           title: product?.name || "Découvrez ce produit",
@@ -705,15 +753,12 @@ function ProductDetails({ product, sameCategoryProducts }) {
         .then(() => console.log("Produit partagé avec succès"))
         .catch((error) => console.error("Erreur lors du partage:", error));
     } else {
-      // Fallback pour les navigateurs qui ne supportent pas l'API Web Share
-      // Copier l'URL dans le presse-papier
       navigator.clipboard
         .writeText(window.location.href)
         .then(() => {
           toast.success("Lien copié dans le presse-papier !");
         })
         .catch(() => {
-          // Si clipboard API n'est pas supportée, créer un élément temporaire
           const tempInput = document.createElement("input");
           tempInput.value = window.location.href;
           document.body.appendChild(tempInput);
@@ -725,12 +770,10 @@ function ProductDetails({ product, sameCategoryProducts }) {
     }
   }, [product?.name]);
 
-  // Gérer la sélection d'image
   const handleImageSelect = useCallback((imageUrl) => {
     setSelectedImage(imageUrl);
   }, []);
 
-  // État de chargement ou d'erreur
   if (!product) {
     return (
       <div className="container max-w-xl mx-auto px-4 py-16 text-center">
@@ -774,24 +817,24 @@ function ProductDetails({ product, sameCategoryProducts }) {
       <div className="container max-w-6xl mx-auto px-4">
         <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 border border-gray-100">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-            {/* Galerie d'images */}
             <ProductImageGallery
               product={product}
               selectedImage={selectedImage}
               onImageSelect={handleImageSelect}
             />
 
-            {/* Informations produit */}
             <ProductInfo
               product={product}
               inStock={inStock}
               onAddToCart={handleAddToCart}
               isAddingToCart={isAddingToCart}
               onShare={handleShare}
+              isFavorite={isFavorite} // ✅ Passer l'état
+              onToggleFavorite={handleToggleFavorite} // ✅ Passer la fonction
+              favoriteLoading={favoriteLoading} // ✅ Passer le loading
             />
           </div>
 
-          {/* Spécifications produit */}
           {product.specifications && (
             <div className="border-t border-gray-200 pt-8 mt-8">
               <h2 className="text-xl font-semibold mb-4">Spécifications</h2>
@@ -807,7 +850,6 @@ function ProductDetails({ product, sameCategoryProducts }) {
           )}
         </div>
 
-        {/* Produits connexes */}
         <RelatedProductsCarousel
           products={sameCategoryProducts}
           currentProductId={product._id}
@@ -817,7 +859,6 @@ function ProductDetails({ product, sameCategoryProducts }) {
   );
 }
 
-// Validation des props pour une meilleure robustesse
 ProductDetails.propTypes = {
   product: PropTypes.shape({
     _id: PropTypes.string,
@@ -843,7 +884,6 @@ ProductDetails.propTypes = {
   sameCategoryProducts: PropTypes.array,
 };
 
-// Valeurs par défaut pour éviter les erreurs
 ProductDetails.defaultProps = {
   product: null,
   sameCategoryProducts: [],
