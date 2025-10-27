@@ -48,13 +48,6 @@ const AboutContent = () => {
     },
   ];
 
-  const stats = [
-    { number: "10K+", label: "Clients satisfaits", icon: <Users /> },
-    { number: "50K+", label: "Produits vendus", icon: <ShoppingBag /> },
-    { number: "98%", label: "Taux de satisfaction", icon: <Star /> },
-    { number: "24/7", label: "Support disponible", icon: <Shield /> },
-  ];
-
   const milestones = [
     {
       year: "2020",
@@ -81,22 +74,13 @@ const AboutContent = () => {
     },
   ];
 
-  const features = [
-    "Livraison rapide et suivie",
-    "Retours gratuits sous 30 jours",
-    "Paiement 100% sécurisé",
-    "Service client réactif",
-    "Programme de fidélité",
-    "Garantie satisfaction",
-  ];
-
   return (
     <div className="max-w-6xl mx-auto">
       {/* Hero Section */}
       <div className="text-center mb-16">
         <h1 className="text-5xl md:text-6xl font-bold text-gray-800 mb-6">
           À propos de{" "}
-          <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          <span className="bg-linear-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
             Buy It Now
           </span>
         </h1>
@@ -105,24 +89,6 @@ const AboutContent = () => {
           votre partenaire de confiance pour une expérience shopping
           exceptionnelle, alliant qualité, rapidité et sécurité.
         </p>
-      </div>
-
-      {/* Stats Section */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
-        {stats.map((stat, index) => (
-          <div
-            key={index}
-            className="bg-white rounded-xl shadow-lg p-6 text-center hover:shadow-xl transition-shadow"
-          >
-            <div className="text-blue-600 flex justify-center mb-3">
-              {stat.icon}
-            </div>
-            <div className="text-3xl font-bold text-gray-800 mb-2">
-              {stat.number}
-            </div>
-            <div className="text-sm text-gray-600">{stat.label}</div>
-          </div>
-        ))}
       </div>
 
       {/* Tabs Section */}
@@ -171,14 +137,6 @@ const AboutContent = () => {
                 Chaque jour, nous travaillons pour améliorer votre expérience et
                 dépasser vos attentes.
               </p>
-              <div className="grid md:grid-cols-2 gap-4 mt-8">
-                {features.map((feature, index) => (
-                  <div key={index} className="flex items-start space-x-3">
-                    <CheckCircle className="w-6 h-6 text-green-500 flex-shrink-0 mt-1" />
-                    <span className="text-gray-700">{feature}</span>
-                  </div>
-                ))}
-              </div>
             </div>
           )}
 
@@ -195,8 +153,8 @@ const AboutContent = () => {
               <div className="space-y-6">
                 {milestones.map((milestone, index) => (
                   <div key={index} className="flex items-start space-x-4">
-                    <div className="flex-shrink-0">
-                      <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold shadow-lg">
+                    <div className="shrink-0">
+                      <div className="w-16 h-16 bg-linear-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold shadow-lg">
                         {milestone.year}
                       </div>
                     </div>
@@ -226,7 +184,7 @@ const AboutContent = () => {
               className="bg-white rounded-xl shadow-lg p-6 hover:shadow-2xl transition-all hover:-translate-y-2 duration-300"
             >
               <div
-                className={`w-16 h-16 bg-gradient-to-br ${value.color} rounded-full flex items-center justify-center text-white mb-4 shadow-lg`}
+                className={`w-16 h-16 bg-linear-to-br ${value.color} rounded-full flex items-center justify-center text-white mb-4 shadow-lg`}
               >
                 {value.icon}
               </div>
@@ -242,7 +200,7 @@ const AboutContent = () => {
       </div>
 
       {/* CTA Section */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl shadow-2xl p-8 md:p-12 text-center text-white">
+      <div className="bg-linear-to-r from-blue-600 to-purple-600 rounded-2xl shadow-2xl p-8 md:p-12 text-center text-white">
         <h2 className="text-3xl md:text-4xl font-bold mb-4">
           Prêt à commencer ?
         </h2>
