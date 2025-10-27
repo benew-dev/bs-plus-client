@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ShoppingBag, TrendingUp, Shield, Zap, ArrowRight } from "lucide-react";
+import { ShoppingBag, ArrowRight } from "lucide-react";
 import { CldImage } from "next-cloudinary";
 
 const Hero = ({ homePageData }) => {
@@ -45,7 +45,7 @@ const Hero = ({ homePageData }) => {
   const hasImage = heroData.image && heroData.image.publicId;
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-gray-50 to-blue-50">
+    <section className="relative overflow-hidden bg-linear-to-br from-gray-50 to-blue-50">
       {/* Animated Background */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-1/2 -right-1/4 w-96 h-96 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
@@ -71,8 +71,8 @@ const Hero = ({ homePageData }) => {
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
               <Link
-                href="/shop"
-                className="group px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg hover:shadow-xl flex items-center justify-center"
+                href="/men"
+                className="group px-8 py-4 bg-linear-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg hover:shadow-xl flex items-center justify-center"
               >
                 Parcourir la boutique
                 <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
@@ -90,7 +90,7 @@ const Hero = ({ homePageData }) => {
           <div className="flex-1 relative z-10">
             <div className="relative rounded-3xl overflow-hidden shadow-2xl">
               {/* Gradient overlay pour un effet artistique */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent z-10"></div>
+              <div className="absolute inset-0 bg-linear-to-t from-black/50 via-transparent to-transparent z-10"></div>
 
               {/* Image dynamique ou fallback */}
               <div className="relative w-full h-[500px] lg:h-[600px]">
@@ -117,7 +117,7 @@ const Hero = ({ homePageData }) => {
               <div className="absolute bottom-6 left-6 right-6 z-20">
                 <div className="bg-white/95 backdrop-blur-sm rounded-xl p-4 shadow-lg">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center flex-shrink-0">
+                    <div className="w-12 h-12 rounded-lg bg-linear-to-br from-blue-600 to-purple-600 flex items-center justify-center shrink-0">
                       <ShoppingBag className="w-6 h-6 text-white" />
                     </div>
                     <div>
