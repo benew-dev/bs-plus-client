@@ -3,15 +3,12 @@
 import { useState } from "react";
 import {
   ShoppingBag,
-  Users,
   Target,
   Heart,
   Shield,
   Zap,
   Award,
   TrendingUp,
-  CheckCircle,
-  Star,
 } from "lucide-react";
 
 const AboutContent = () => {
