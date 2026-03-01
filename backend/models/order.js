@@ -249,8 +249,9 @@ orderSchema.index({ "user.userId": 1, createdAt: -1 });
 orderSchema.index({ paymentStatus: 1, createdAt: -1 });
 orderSchema.index({ createdAt: -1 });
 
-// Créer un identifiant unique au format ORD-YYYYMMDD-XXXXX
-orderSchema.pre("save", async function (next) {
+// Middleware pre-save unique : génération orderNumber + validation cohérence
+orderSchema.pre("save", async function () {
+  // 1. Génération du numéro de commande (uniquement pour nouvelles commandes)
   if (this.isNew) {
     try {
       const date = new Date();
@@ -284,6 +285,7 @@ orderSchema.pre("save", async function (next) {
       this.orderNumber = `ORD-${timestamp.substring(0, 8)}-${timestamp.substring(8)}`;
     }
 
+    // Calcul des sous-totaux
     if (this.orderItems && this.orderItems.length > 0) {
       this.orderItems.forEach((item) => {
         if (!item.subtotal) {
@@ -293,12 +295,7 @@ orderSchema.pre("save", async function (next) {
     }
   }
 
-  this.updatedAt = Date.now();
-  next();
-});
-
-// Vérifier la cohérence des données avant sauvegarde
-orderSchema.pre("save", function (next) {
+  // 2. Vérification de la cohérence des données
   if (this.isModified("orderItems") || this.isNew) {
     const itemsTotal = this.orderItems.reduce(
       (sum, item) => sum + (item.subtotal || item.price * item.quantity),
@@ -315,7 +312,8 @@ orderSchema.pre("save", function (next) {
     this.paidAt = Date.now();
   }
 
-  next();
+  // 3. Mise à jour du timestamp
+  this.updatedAt = Date.now();
 });
 
 // Mettre à jour le stock après création d'une commande
