@@ -38,8 +38,6 @@ export const GET = withIntelligentRateLimit(
         .sort({ createdAt: -1 })
         .lean();
 
-      console.log("Homepage data retrieved from DB:", homePage);
-
       // Si aucune page d'accueil n'existe
       if (!homePage) {
         return NextResponse.json(
