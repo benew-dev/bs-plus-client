@@ -16,7 +16,7 @@ const ServiceWorkerManager = dynamic(
 );
 
 const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://bs-plus-client.vercel.app";
+  process.env.NEXT_PUBLIC_SITE_URL || "https://mstandard.benew-dj.com";
 
 // Métadonnées globales pour le site avec configuration des icônes
 export const metadata = {
